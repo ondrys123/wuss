@@ -1,0 +1,9 @@
+enclave {
+   trusted {
+        public int test(int test_input_);
+    };
+
+    untrusted {
+        void print_int(int i_);
+    };
+};
