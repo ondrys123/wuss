@@ -11,13 +11,11 @@ project(wuss
 )
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-
-set(SGX_DIR /home/oncha/sgxsdk CACHE PATH "Path to SGX-SDK")
-set(ENV{SGX_SDK} ${SGX_DIR})
-
 set(SGX_HW OFF CACHE BOOL "Enable HW mode" FORCE)
 set(SGX_MODE "Debug" CACHE STRING "SGX mode" FORCE)
-
+if(DEFINED SGX_DIR)
+    set(ENV{SGX_SDK} ${SGX_DIR})
+endif()
 find_package(SGX REQUIRED)
 
 set(test_enclave_sources
@@ -43,8 +41,8 @@ add_untrusted_executable(main
     EDL enclave.edl
     EDL_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}
 )
-add_dependencies(main test_enclave_lib-sign)
 
+add_dependencies(main test_enclave_lib-sign)
 target_compile_definitions(main PUBLIC ENCLAVE_FILE="test_enclave_lib.signed.so")
 
 # Unused variables
