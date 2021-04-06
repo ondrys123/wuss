@@ -14,15 +14,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add FindSGX.cmake
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(Dependencies)
 
 # Set Simulation and Debug mode
 set(SGX_HW OFF CACHE BOOL "Enable HW mode" FORCE)
 set(SGX_MODE "Debug" CACHE STRING "SGX mode" FORCE)
 
 # Check if path to SGX SDK is defined, add SGX package
-if(DEFINED SGX_DIR)
-    set(ENV{SGX_SDK} ${SGX_DIR})
-endif()
 find_package(SGX REQUIRED)
 
 # Add project subdirectories
@@ -46,6 +44,7 @@ add_untrusted_executable(wuss
 
 # Add signed lib as dependency
 add_dependencies(wuss ${signed_target})
+target_link_libraries(wuss PUBLIC Boost::program_options)
 
 # Define "trusted/trusted.signed.so"
 target_compile_definitions(wuss PUBLIC SIGNED_LIB="trusted/${signed_lib}")

@@ -5,9 +5,9 @@ include(CMakeParseArguments)
 
 set(SGX_FOUND "NO")
 
-if(EXISTS SGX_DIR)
+if(EXISTS ${SGX_DIR})
     set(SGX_PATH ${SGX_DIR})
-elseif(EXISTS SGX_ROOT)
+elseif(EXISTS ${SGX_ROOT})
     set(SGX_PATH ${SGX_ROOT})
 elseif(EXISTS $ENV{SGX_SDK})
     set(SGX_PATH $ENV{SGX_SDK})
@@ -49,34 +49,42 @@ if(SGX_FOUND)
     set(SGX_MODE PreRelease CACHE STRING "SGX build mode: Debug; PreRelease; Release.")
 
     if(SGX_HW)
-        set(SGX_URTS_LIB sgx_urts)
-        set(SGX_USVC_LIB sgx_uae_service)
+        find_library(lib_sgx_urts        "sgx_urts"        PATHS ${SGX_LIBRARY_PATH} REQUIRED)
+        find_library(lib_sgx_uae_service "sgx_uae_service" PATHS ${SGX_LIBRARY_PATH} REQUIRED)
         set(SGX_TRTS_LIB sgx_trts)
         set(SGX_TSVC_LIB sgx_tservice)
     else()
-        set(SGX_URTS_LIB sgx_urts_sim)
-        set(SGX_USVC_LIB sgx_uae_service_sim)
+        find_library(lib_sgx_urts        "sgx_urts_sim"        PATHS ${SGX_LIBRARY_PATH} REQUIRED)
+        find_library(lib_sgx_uae_service "sgx_uae_service_sim" PATHS ${SGX_LIBRARY_PATH} REQUIRED)
         set(SGX_TRTS_LIB sgx_trts_sim)
         set(SGX_TSVC_LIB sgx_tservice_sim)
     endif()
 
+    add_library(sgx_urts INTERFACE)
+    add_library(sgx_uae_service INTERFACE)
+    target_link_libraries(sgx_urts INTERFACE ${lib_sgx_urts})
+    target_link_libraries(sgx_uae_service INTERFACE ${lib_sgx_uae_service})
+
+    find_library(lib_sgx_ukey_exchange "sgx_ukey_exchange" PATHS ${SGX_LIBRARY_PATH} REQUIRED)
+    add_library(sgx_ukey_exchange INTERFACE)
+    add_dependencies(sgx_ukey_exchange lib_sgx_ukey_exchange)
+
     if(SGX_MODE STREQUAL "Debug")
-        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS} -O0 -g -DDEBUG -UNDEBUG -UEDEBUG")
+        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS};-O0;-g;-DDEBUG;-UNDEBUG;-UEDEBUG")
     elseif(SGX_MODE STREQUAL "PreRelease")
-        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS} -O2 -UDEBUG -DNDEBUG -DEDEBUG")
+        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS};-O2;-UDEBUG;-DNDEBUG;-DEDEBUG")
     elseif(SGX_MODE STREQUAL "Release")
-        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS} -O2 -UDEBUG -DNDEBUG -UEDEBUG")
+        set(SGX_COMMON_CFLAGS "${SGX_COMMON_CFLAGS};-O2;-UDEBUG;-DNDEBUG;-UEDEBUG")
     else()
         message(FATAL_ERROR "SGX_MODE ${SGX_MODE} is not Debug, PreRelease or Release.")
     endif()
 
     set(ENCLAVE_INC_DIRS "${SGX_INCLUDE_DIR}" "${SGX_TLIBC_INCLUDE_DIR}" "${SGX_LIBCXX_INCLUDE_DIR}")
-    set(ENCLAVE_C_FLAGS "${SGX_COMMON_CFLAGS} -nostdinc -fvisibility=hidden -fpie -fstack-protector-strong")
-    set(ENCLAVE_CXX_FLAGS "${ENCLAVE_C_FLAGS} -nostdinc++")
-
+    set(ENCLAVE_C_FLAGS "${SGX_COMMON_CFLAGS};-nostdinc;-fvisibility=hidden;-fpie;-fstack-protector-strong")
+    set(ENCLAVE_CXX_FLAGS "${ENCLAVE_C_FLAGS};-nostdinc++")
     set(APP_INC_DIRS "${SGX_PATH}/include")
-    set(APP_C_FLAGS "${SGX_COMMON_CFLAGS} -fPIC -Wno-attributes ${APP_INC_FLAGS}")
-    set(APP_CXX_FLAGS "${APP_C_FLAGS}")
+    set(APP_C_FLAGS "${SGX_COMMON_CFLAGS};-fPIC;-Wno-attributes")
+    set(APP_CXX_FLAGS ${APP_C_FLAGS})
 
     function(_build_edl_obj edl edl_search_paths use_prefix)
         get_filename_component(EDL_NAME ${edl} NAME_WE)
@@ -98,7 +106,7 @@ if(SGX_FOUND)
                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
         add_library(${target}-edlobj OBJECT ${EDL_T_C})
-        set_target_properties(${target}-edlobj PROPERTIES COMPILE_FLAGS ${ENCLAVE_C_FLAGS})
+        target_compile_options(${target}-edlobj PRIVATE ${ENCLAVE_C_FLAGS})
         target_include_directories(${target}-edlobj PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${ENCLAVE_INC_DIRS})
 
         set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_CURRENT_BINARY_DIR}/${EDL_NAME}_t.h")
@@ -165,15 +173,16 @@ if(SGX_FOUND)
             string(APPEND TLIB_LIST "$<TARGET_FILE:${TLIB}> ")
             add_dependencies(${target} ${TLIB})
         endforeach()
-
-        target_link_libraries(${target} "${SGX_COMMON_CFLAGS} \
-            -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L${SGX_LIBRARY_PATH} \
+        target_compile_options(${target} PRIVATE "${SGX_COMMON_CFLAGS}")
+        target_link_libraries(${target}
+            "-Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L${SGX_LIBRARY_PATH} \
             -Wl,--whole-archive -l${SGX_TRTS_LIB} -Wl,--no-whole-archive \
             -Wl,--start-group ${TLIB_LIST} -lsgx_tstdc -lsgx_tcxx -lsgx_tkey_exchange -lsgx_tcrypto -l${SGX_TSVC_LIB} -Wl,--end-group \
             -Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
             -Wl,-pie,-eenclave_entry -Wl,--export-dynamic \
             ${LDSCRIPT_FLAG} \
             -Wl,--defsym,__ImageBase=0")
+
     endfunction()
 
     # sign the enclave, according to configurations one-step or two-step signing will be performed.
@@ -263,14 +272,9 @@ if(SGX_FOUND)
         endforeach()
 
         add_library(${target} ${mode} ${SGX_SRCS} ${EDL_U_SRCS})
-        set_target_properties(${target} PROPERTIES COMPILE_FLAGS ${APP_CXX_FLAGS})
+        target_compile_options(${target} PRIVATE ${APP_CXX_FLAGS})
         target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${APP_INC_DIRS})
-        target_link_libraries(${target} "${SGX_COMMON_CFLAGS} \
-                                         -L${SGX_LIBRARY_PATH} \
-                                         -l${SGX_URTS_LIB} \
-                                         -l${SGX_USVC_LIB} \
-                                         -lsgx_ukey_exchange \
-                                         -lpthread")
+        target_link_libraries(${target} PUBLIC sgx_urts sgx_uae_service sgx_ukey_exchange pthread)
 
         set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_CURRENT_BINARY_DIR}/${EDL_NAME}_u.h")
     endfunction()
@@ -312,14 +316,10 @@ if(SGX_FOUND)
         endforeach()
 
         add_executable(${target} ${SGX_SRCS} ${EDL_U_SRCS})
-        set_target_properties(${target} PROPERTIES COMPILE_FLAGS ${APP_CXX_FLAGS})
+        target_compile_options(${target} PRIVATE ${APP_CXX_FLAGS})
         target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${APP_INC_DIRS})
-        target_link_libraries(${target} "${SGX_COMMON_CFLAGS} \
-                                         -L${SGX_LIBRARY_PATH} \
-                                         -l${SGX_URTS_LIB} \
-                                         -l${SGX_USVC_LIB} \
-                                         -lsgx_ukey_exchange \
-                                         -lpthread")
+        target_link_libraries(${target} PUBLIC sgx_urts sgx_uae_service sgx_ukey_exchange pthread)
+        add_dependencies(${target} sgx_urts sgx_uae_service)
         set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${EDL_U_HDRS})
     endfunction()
 
