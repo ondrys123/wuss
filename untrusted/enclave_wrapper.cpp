@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 
+namespace wuss
+{
 std::optional<enclave_wrapper> enclave_wrapper::_instance = {};
 
 enclave_wrapper::enclave_wrapper(token)
@@ -35,13 +37,18 @@ enclave_wrapper& enclave_wrapper::get_instance()
     return *_instance;
 }
 
-int enclave_wrapper::call_test(int i_)
+enclave_wrapper::~enclave_wrapper()
 {
-    std::cout << "calling 'test' with arg " << i_ << std::endl;
-    int ret_val = -1;
-    auto status = test(_enclave_id, &ret_val, i_);
+    sgx_destroy_enclave(_enclave_id);
+}
+
+bool enclave_wrapper::show_all_items()
+{
+    std::cout << "calling show_all_items" << std::endl;
+    int ret_val;
+    auto status = test(_enclave_id, &ret_val, 42);
     std::cout << (status == sgx_status_t::SGX_SUCCESS ? "Success" : "Fail") << std::endl;
-    return ret_val;
+    return status == sgx_status_t::SGX_SUCCESS;
 }
 
 /********************************************************************************/
@@ -52,3 +59,4 @@ void enclave_wrapper::print_int_impl(int i_)
 {
     std::cout << "#### Printing argument from enclave: i=" << i_ << " ####" << std::endl;
 }
+} // namespace wuss

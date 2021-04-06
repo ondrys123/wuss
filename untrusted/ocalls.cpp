@@ -2,6 +2,7 @@
 #include "enclave_wrapper.hpp"
 
 /** We implement the ocall functions here **/
+using namespace wuss;
 
 void print_int(int i_)
 {

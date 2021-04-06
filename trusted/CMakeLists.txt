@@ -12,6 +12,7 @@ set(sources
 
 set(headers
     ${CMAKE_CURRENT_SOURCE_DIR}/wallet.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/item.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/storage_handler.hpp
 )
 
