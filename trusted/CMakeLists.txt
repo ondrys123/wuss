@@ -7,6 +7,7 @@ set(signed_target ${target}-sign CACHE INTERNAL "asd")
 set(sources
     ${CMAKE_CURRENT_SOURCE_DIR}/wallet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/storage_handler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ecalls.cpp
 )
 
 set(headers
