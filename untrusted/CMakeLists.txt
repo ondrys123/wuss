@@ -9,6 +9,7 @@ set(headers
 set(sources
     ${CMAKE_CURRENT_SOURCE_DIR}/enclave_wrapper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/io_handler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ocalls.cpp
 )
 
 set(${target}_files ${sources} ${header} PARENT_SCOPE)
