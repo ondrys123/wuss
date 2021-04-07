@@ -2,15 +2,20 @@
 
 #include "../trusted/item.hpp"
 #include <boost/core/noncopyable.hpp>
+#include <iostream>
 #include <optional>
 #include <sgx_eid.h>
 #include <string>
+#include <vector>
 
 namespace wuss
 {
 class enclave_wrapper : private boost::noncopyable
 {
 private:
+    /**
+     * @brief Token is used to call private constructor
+     */
     struct token
     {};
 
@@ -28,22 +33,77 @@ public: // Constructors, static methods
     ~enclave_wrapper();
 
 public: // Public methods
-    sgx_enclave_id_t get_enclave_id() const { return _enclave_id; }
+    /**
+     * @brief Returns enclave ID
+     * @return encalve ID
+     */
+    sgx_enclave_id_t get_enclave_id() const { return _eid; }
 
-    bool create_wallet(const std::string mp_);
-    bool delete_wallet(const std::string mp_);
-    bool change_master_password(const std::string old_mp_, const std::string new_mp_);
-    bool add_item(const item&);
-    bool delete_item(const id_t&);
-    bool show_item(const id_t&);
-    bool show_all_items();
+    /**
+     * @brief Creates new wallet
+     * @param mp_ master password
+     * @return true on success
+     */
+    bool create_wallet(const password_t& mp_);
+
+    /**
+     * @brief Deletes existing wallet
+     * @param mp_ master password
+     * @return true on success
+     */
+    bool delete_wallet(const password_t& mp_);
+
+    /**
+     * @brief Checks that given password is same as the one in wallet
+     * @param mp_ master password
+     * @return true if passwords match
+     */
+    bool check_password(const password_t& mp_);
+
+    /**
+     * @brief Sets new master password for the wallet
+     * @param old_mp_ current master password
+     * @param new_mp_ new master password
+     * @return true if successfully changed
+     */
+    bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
+
+    /**
+     * @brief Add new item to the wallet
+     * @return true on success
+     */
+    bool add_item(const item& item_);
+
+    /**
+     * @brief Delete existing item from wallet
+     * @return true on success
+     */
+    bool delete_item(const id_t& id_);
+
+    /**
+     * @brief Shows login and password for given id
+     * @return true
+     */
+    std::optional<item> show_item(const id_t& id_);
+
+    /**
+     * @brief Shows all items that are stored in wallet
+     * @return vector of wallet items
+     */
+    std::vector<item> show_all_items();
+
+    /**
+     * @brief Shows IDs that are stored in wallet
+     * @return vector of IDs
+     */
+    std::vector<id_t> list_all_ids();
 
 
 public: // OCALL Handlers
-    void print_int_impl(int i_);
+    void print_error_message(const std::string& error_);
 
-private: // Private members
-    static std::optional<enclave_wrapper> _instance;
-    sgx_enclave_id_t _enclave_id{};
+private:                                             // Private members
+    static std::optional<enclave_wrapper> _instance; ///< Used enclave_wrapper instance
+    sgx_enclave_id_t _eid{};                         ///< Enclave ID
 };
 } // namespace wuss

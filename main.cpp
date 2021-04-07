@@ -12,9 +12,9 @@ int main()
     {
         po::options_description options("TODO");
         options.add_options()("help,h", "prints help");
-
-        auto& w       = enclave_wrapper::get_instance();
-        const int res = w.show_all_items();
+        auto& w = enclave_wrapper::get_instance();
+        w.create_wallet("dragon1");
+        w.show_item("item name");
     }
     catch (const std::runtime_error& e_)
     {

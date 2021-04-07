@@ -1,9 +1,14 @@
 enclave {
    trusted {
-        public int test(int test_input_);
+        public int create_wallet([in, string]const char* mp_);
+        public int delete_wallet([in, string]const char* mp_);
+        public int check_password([in, string]const char* mp_);
+        public int change_master_password([in, string]const char* old_mp_, [in, string]const char* new_mp_);
+
     };
 
     untrusted {
-        void print_int(int i_);
+        void print_error_message([in, string]const char* message_);
+
     };
 };
