@@ -114,7 +114,28 @@ std::vector<item> enclave_wrapper::show_all_items()
 
 std::vector<id_t> enclave_wrapper::list_all_ids()
 {
-    return {};
+    uint32_t size{};
+    auto status = get_ids_total_size(_eid, &size);
+    if (status != sgx_status_t::SGX_SUCCESS)
+    {
+        throw std::runtime_error("error");
+    }
+    auto buff = std::make_unique<char[]>(size);
+    int retval{};
+    status = ::list_all_ids(_eid, &retval, buff.get(), size);
+    if (status != sgx_status_t::SGX_SUCCESS || !retval)
+    {
+        throw std::runtime_error("error2");
+    }
+    std::vector<id_t> result;
+    char* it        = buff.get();
+    const char* end = buff.get() + size;
+    while (it < end)
+    {
+        result.emplace_back(it);
+        it += result.back().size() + 1;
+    }
+    return result;
 }
 
 
@@ -123,7 +144,7 @@ std::vector<id_t> enclave_wrapper::list_all_ids()
 /********************************************************************************/
 
 
-void enclave_wrapper::print_error_message(const std::string& error_)
+void enclave_wrapper::on_error(const std::string& error_)
 {
     std::cerr << "Error: " << error_ << std::endl;
 }

@@ -14,7 +14,10 @@ int main()
         options.add_options()("help,h", "prints help");
         auto& w = enclave_wrapper::get_instance();
         w.create_wallet("dragon1");
-        w.show_item("item name");
+        for (const auto& id : w.list_all_ids())
+        {
+            std::cout << "ID: " << id << std::endl;
+        }
     }
     catch (const std::runtime_error& e_)
     {

@@ -4,7 +4,7 @@
 /** We implement the ocall functions here **/
 using namespace wuss;
 
-void print_error_message(const char* message_)
+void on_error(const char* message_)
 {
-    enclave_wrapper::get_instance().print_error_message(message_);
+    enclave_wrapper::get_instance().on_error(message_);
 }

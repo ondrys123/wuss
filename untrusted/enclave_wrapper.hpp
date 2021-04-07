@@ -13,11 +13,8 @@ namespace wuss
 class enclave_wrapper : private boost::noncopyable
 {
 private:
-    /**
-     * @brief Token is used to call private constructor
-     */
     struct token
-    {};
+    {}; // Constructor token
 
 public: // Constructors, static methods
     /** @brief Creates enclave **/
@@ -100,7 +97,7 @@ public: // Public methods
 
 
 public: // OCALL Handlers
-    void print_error_message(const std::string& error_);
+    void on_error(const std::string& error_);
 
 private:                                             // Private members
     static std::optional<enclave_wrapper> _instance; ///< Used enclave_wrapper instance
