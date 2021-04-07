@@ -3,12 +3,26 @@ enclave {
         public int create_wallet([in, string]const char* mp_);
         public int delete_wallet([in, string]const char* mp_);
         public int check_password([in, string]const char* mp_);
-        public int change_master_password([in, string]const char* old_mp_, [in, string]const char* new_mp_);
+        public int change_master_password([in, string]const char* old_mp_,
+                                          [in, string]const char* new_mp_);
+        public int add_item([in, string]const char* id_,
+                            [in, string]const char* login_,
+                            [in, string]const char* password_);
+        public int delete_item([in, string]const char* id_);
+        public int show_item([in, string]const char* id_,
+                             [out, count=output_max_size_]char* output_,
+                             uint32_t output_max_size_);
+        public int list_all_ids([out, count=output_max_size_]char* output_,
+                                uint32_t output_max_size_);
+        public int show_all_items([out, count=output_max_size_]char* output_,
+                                  uint32_t output_max_size_);
+
+        public uint32_t get_ids_total_size();
+        public uint32_t get_wallet_total_size();
 
     };
 
     untrusted {
-        void print_error_message([in, string]const char* message_);
-
+        void on_error([in, string]const char* message_);
     };
 };
