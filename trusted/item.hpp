@@ -6,7 +6,7 @@ using id_t       = std::string;
 using login_t    = std::string;
 using password_t = std::string;
 
-struct item
+struct item_t
 {
     id_t id;
     login_t username;

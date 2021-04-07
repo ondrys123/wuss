@@ -39,7 +39,7 @@ bool wallet::change_master_password(const password_t& /*old_mp_*/, const passwor
     return false;
 }
 
-bool wallet::add_item(const item& /*item_*/)
+bool wallet::add_item(const item_t& /*item_*/)
 {
     on_error("add_item Not yet implemeted");
     return false;
@@ -62,7 +62,7 @@ bool wallet::show_item(const id_t& id_, login_t& login_, password_t& password_)
     return false;
 }
 
-std::vector<item> wallet::show_all_items() const
+std::vector<item_t> wallet::show_all_items() const
 {
     return {};
 }
@@ -92,7 +92,7 @@ void wallet::on_error(const std::string& message_) const
 
 wallet::wallet(wallet::token)
 {
-    _items.push_back(item{"asd", "asd", "asd"});
+    _items.push_back(item_t{"asd", "asd", "asd"});
 }
 
 } // namespace wuss

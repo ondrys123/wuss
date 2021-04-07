@@ -69,7 +69,7 @@ public: // Public methods
      * @brief Add new item to the wallet
      * @return true on success
      */
-    bool add_item(const item& item_);
+    bool add_item(const item_t& item_);
 
     /**
      * @brief Delete existing item from wallet
@@ -81,13 +81,13 @@ public: // Public methods
      * @brief Shows login and password for given id
      * @return true
      */
-    std::optional<item> show_item(const id_t& id_);
+    std::optional<item_t> show_item(const id_t& id_);
 
     /**
      * @brief Shows all items that are stored in wallet
      * @return vector of wallet items
      */
-    std::vector<item> show_all_items();
+    std::vector<item_t> show_all_items();
 
     /**
      * @brief Shows IDs that are stored in wallet

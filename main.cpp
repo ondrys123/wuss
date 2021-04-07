@@ -1,23 +1,17 @@
 #include "untrusted/enclave_wrapper.hpp"
-
+#include "untrusted/io_handler.hpp"
 #include <boost/program_options.hpp>
 #include <iomanip>
 #include <iostream>
 
+
 namespace po = boost::program_options;
 using namespace wuss;
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
-        po::options_description options("TODO");
-        options.add_options()("help,h", "prints help");
-        auto& w = enclave_wrapper::get_instance();
-        w.create_wallet("dragon1");
-        for (const auto& id : w.list_all_ids())
-        {
-            std::cout << "ID: " << id << std::endl;
-        }
+        io_handler::run(argc, argv);
     }
     catch (const std::runtime_error& e_)
     {
