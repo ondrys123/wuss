@@ -91,7 +91,7 @@ bool enclave_wrapper::change_master_password(const password_t& old_mp_, const pa
     return ret;
 }
 
-bool enclave_wrapper::add_item(const item&)
+bool enclave_wrapper::add_item(const item_t&)
 {
     return false;
 }
@@ -101,13 +101,13 @@ bool enclave_wrapper::delete_item(const id_t&)
     return false;
 }
 
-std::optional<item> enclave_wrapper::show_item(const id_t&)
+std::optional<item_t> enclave_wrapper::show_item(const id_t&)
 {
     return {};
 }
 
 
-std::vector<item> enclave_wrapper::show_all_items()
+std::vector<item_t> enclave_wrapper::show_all_items()
 {
     return {};
 }

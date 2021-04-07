@@ -32,10 +32,10 @@ public: // Public methods
     bool delete_wallet(const password_t& mp_);
     bool check_password(const password_t& mp_);
     bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
-    bool add_item(const item& item_);
+    bool add_item(const item_t& item_);
     bool delete_item(const id_t& id_);
     bool show_item(const id_t& id_, login_t& login_, password_t& password_);
-    std::vector<item> show_all_items() const;
+    std::vector<item_t> show_all_items() const;
     std::vector<id_t> list_all_ids() const;
 
     uint32_t get_ids_total_size() const;
@@ -47,6 +47,6 @@ public: // OCALL Handlers
 
 private: // Private members
     static std::unique_ptr<wallet> _instance;
-    std::vector<item> _items;
+    std::vector<item_t> _items;
 };
 } // namespace wuss

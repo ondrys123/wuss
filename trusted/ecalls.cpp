@@ -26,7 +26,7 @@ int change_master_password(const char* old_mp_, const char* new_mp_)
 
 int add_item(const char* id_, const char* login_, const char* password_)
 {
-    return wallet::get_instance().add_item(item{id_, login_, password_});
+    return wallet::get_instance().add_item(item_t{id_, login_, password_});
 }
 
 int delete_item(const char* id_)

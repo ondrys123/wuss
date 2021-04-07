@@ -3,11 +3,28 @@
 #include <boost/program_options.hpp>
 #include <string>
 
-#include "./enclave_wrapper.hpp"
 #include "../trusted/item.hpp"
+#include "./enclave_wrapper.hpp"
 
-namespace wuss {
-class io_handler {
+namespace wuss
+{
+namespace po = boost::program_options;
+
+enum class action_t
+{
+    help,
+    new_wallet,
+    delete_wallet,
+    new_entry,
+    edit_entry,
+    view_entry,
+    remove_entry,
+    view_all_entries,
+    change_master_password
+};
+
+class io_handler
+{
 public:
     static int run(std::size_t argc, char* argv[]);
 
