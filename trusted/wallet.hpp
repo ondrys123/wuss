@@ -40,6 +40,7 @@ public:
     std::set<item_t> show_all_items() const;
     std::vector<id_t> list_all_ids() const;
 
+    uint32_t get_max_field_size() const;
     uint32_t get_ids_total_size() const;
     uint32_t get_wallet_total_size() const;
 
@@ -49,7 +50,8 @@ public:
 
     // Private members
 private:
-    static std::unique_ptr<wallet> _instance; ///< Wallet instance
+    static std::unique_ptr<wallet> _instance;        ///< Wallet instance
+    static constexpr uint32_t _max_field_size = 128; ///< Maximum size of id/username/password including terminating '\0'
 
     bool _is_wallet_loaded{};     ///< Whether the wallet class has valid wallet data loaded
     std::string _master_password; ///< Master password for currently loaded wallet

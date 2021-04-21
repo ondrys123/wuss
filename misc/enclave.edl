@@ -17,6 +17,7 @@ enclave {
         public int show_all_items([out, count=output_max_size_]char* output_,
                                   uint32_t output_max_size_);
 
+        public uint32_t get_max_field_size();
         public uint32_t get_ids_total_size();
         public uint32_t get_wallet_total_size();
 
