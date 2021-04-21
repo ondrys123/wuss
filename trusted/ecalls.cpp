@@ -9,9 +9,9 @@ int create_wallet(const char* mp_)
     return wallet::get_instance().create_wallet(mp_);
 }
 
-int delete_wallet(const char* mp_)
+int delete_wallet()
 {
-    return wallet::get_instance().delete_wallet(mp_);
+    return wallet::get_instance().delete_wallet();
 }
 
 int check_password(const char* mp_)
@@ -58,10 +58,8 @@ int show_item(const char* id_, char* output_, uint32_t output_max_size_)
     if (login.size() + password.size() + 2 > output_max_size_)
         return false;
 
-    // Copy login
     output_ = std::copy(login.begin(), login.end(), output_);
     output_++;
-    // Copy password
     std::copy(password.begin(), password.end(), output_);
     return true;
 }
