@@ -51,7 +51,6 @@ public:
 private:
     static std::unique_ptr<wallet> _instance; ///< Wallet instance
 
-    bool _is_wallet_loaded{};     ///< Whether the wallet class has valid wallet data loaded
     std::string _master_password; ///< Master password for currently loaded wallet
     std::set<item_t> _items;      ///< Items stored in currently loaded wallet
 };
