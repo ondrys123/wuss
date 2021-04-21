@@ -45,10 +45,9 @@ public: // Public methods
 
     /**
      * @brief Deletes existing wallet
-     * @param mp_ master password
      * @return true on success
      */
-    bool delete_wallet(const password_t& mp_);
+    bool delete_wallet();
 
     /**
      * @brief Checks that given password is same as the one in wallet

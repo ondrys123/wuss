@@ -58,10 +58,10 @@ bool enclave_wrapper::create_wallet(const password_t& mp_)
     return ret;
 }
 
-bool enclave_wrapper::delete_wallet(const password_t& mp_)
+bool enclave_wrapper::delete_wallet()
 {
     int ret{};
-    auto status = ::delete_wallet(_eid, &ret, mp_.c_str());
+    auto status = ::delete_wallet(_eid, &ret);
     if (status != sgx_status_t::SGX_SUCCESS)
     {
         throw std::runtime_error("ASDASDAS");
