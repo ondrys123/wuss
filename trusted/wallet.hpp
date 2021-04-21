@@ -38,6 +38,7 @@ public: // Public methods
     std::vector<item_t> show_all_items() const;
     std::vector<id_t> list_all_ids() const;
 
+    uint32_t get_max_field_size() const;
     uint32_t get_ids_total_size() const;
     uint32_t get_wallet_total_size() const;
 
@@ -46,6 +47,7 @@ public: // OCALL Handlers
 
 
 private: // Private members
+    static constexpr uint32_t _max_field_size = 128;
     static std::unique_ptr<wallet> _instance;
     std::vector<item_t> _items;
 };
