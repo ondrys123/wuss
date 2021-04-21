@@ -31,12 +31,12 @@ public:
     // Public methods
 public:
     bool create_wallet(const password_t& mp_);
-    bool delete_wallet(const password_t& mp_);
+    bool delete_wallet();
     bool check_password(const password_t& mp_);
     bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
     bool add_item(const item_t& item_);
     bool delete_item(const id_t& id_);
-    bool show_item(const id_t& id_, login_t& login_, password_t& password_);
+    bool show_item(const id_t& id_, login_t& login_, password_t& password_) const;
     std::set<item_t> show_all_items() const;
     std::vector<id_t> list_all_ids() const;
 
@@ -48,12 +48,23 @@ public:
 public:
     void on_error(const std::string& message_) const;
 
+    // Private methods
+private:
+    void update_stored_wallet() const;
+
     // Private members
 private:
+    enum class state
+    {
+        not_loaded,
+        loaded,
+        open
+    };
+
     static std::unique_ptr<wallet> _instance;        ///< Wallet instance
     static constexpr uint32_t _max_field_size = 128; ///< Maximum size of id/username/password including terminating '\0'
 
-    bool _is_wallet_loaded{};     ///< Whether the wallet class has valid wallet data loaded
+    state _state;
     std::string _master_password; ///< Master password for currently loaded wallet
     std::set<item_t> _items;      ///< Items stored in currently loaded wallet
 };
