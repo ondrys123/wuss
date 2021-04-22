@@ -199,8 +199,8 @@ uint32_t wallet::get_wallet_total_size() const
         on_error("[get_wallet_total_size] Wallet not open");
         return 0;
     }
-
-    return std::accumulate(_items.begin(), _items.end(), 0ul, [](uint32_t acc_, const auto& i_) { return acc_ + i_.username.size() + i_.password.size() + 3; });
+    const auto acc = [](uint32_t acc_, const auto& i_) { return acc_ + i_.id.size() + i_.username.size() + i_.password.size() + 3; };
+    return std::accumulate(_items.begin(), _items.end(), 0ul, acc);
 }
 
 
