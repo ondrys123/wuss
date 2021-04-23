@@ -1,8 +1,6 @@
 #include "wallet.hpp"
 #include "enclave_t.h"
-#include <memory>
-#include <unordered_map>
-#include <vector>
+
 
 namespace wuss
 {
@@ -62,7 +60,7 @@ bool wallet::show_item(const id_t& id_, login_t& login_, password_t& password_)
     return false;
 }
 
-std::vector<item_t> wallet::show_all_items() const
+std::set<item_t> wallet::show_all_items() const
 {
     return {};
 }
@@ -97,7 +95,7 @@ void wallet::on_error(const std::string& message_) const
 
 wallet::wallet(wallet::token)
 {
-    _items.push_back(item_t{"asd", "asd", "asd"});
+    _items.insert(item_t{"asd", "asd", "asd"});
 }
 
 } // namespace wuss

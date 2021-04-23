@@ -13,4 +13,9 @@ struct item_t
     password_t password;
 };
 
+inline bool operator<(const item_t& l_, const item_t& r_)
+{
+    return l_.id < r_.id;
+}
+
 } // namespace wuss

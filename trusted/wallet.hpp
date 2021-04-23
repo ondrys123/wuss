@@ -1,9 +1,9 @@
 #pragma once
 
 #include "item.hpp"
+#include <memory>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace wuss
@@ -14,7 +14,8 @@ private:
     struct token
     {};
 
-public: // Constructors, static methods
+    // Constructors, static methods
+public:
     /** @brief Creates wallet **/
     wallet(token);
 
@@ -27,7 +28,8 @@ public: // Constructors, static methods
     wallet& operator=(const wallet&) = delete;
     wallet(const wallet&)            = delete;
 
-public: // Public methods
+    // Public methods
+public:
     bool create_wallet(const password_t& mp_);
     bool delete_wallet(const password_t& mp_);
     bool check_password(const password_t& mp_);
@@ -35,20 +37,23 @@ public: // Public methods
     bool add_item(const item_t& item_);
     bool delete_item(const id_t& id_);
     bool show_item(const id_t& id_, login_t& login_, password_t& password_);
-    std::vector<item_t> show_all_items() const;
+    std::set<item_t> show_all_items() const;
     std::vector<id_t> list_all_ids() const;
 
     uint32_t get_max_field_size() const;
     uint32_t get_ids_total_size() const;
     uint32_t get_wallet_total_size() const;
 
-public: // OCALL Handlers
+    // OCALL Handlers
+public:
     void on_error(const std::string& message_) const;
 
-
-private: // Private members
+    // Private members
+private:
+    static std::unique_ptr<wallet> _instance; ///< Wallet instance
     static constexpr uint32_t _max_field_size = 128;
-    static std::unique_ptr<wallet> _instance;
-    std::vector<item_t> _items;
+
+    std::string _master_password; ///< Master password for currently loaded wallet
+    std::set<item_t> _items;      ///< Items stored in currently loaded wallet
 };
 } // namespace wuss
