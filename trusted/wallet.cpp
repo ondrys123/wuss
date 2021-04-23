@@ -70,6 +70,11 @@ std::vector<id_t> wallet::list_all_ids() const
     return {"test"};
 }
 
+uint32_t wallet::get_max_field_size() const
+{
+    return _max_field_size;
+}
+
 uint32_t wallet::get_ids_total_size() const
 {
     const uint32_t result = std::string("test").size() + 1; // Accumulate total
