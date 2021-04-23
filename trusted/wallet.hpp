@@ -56,15 +56,15 @@ private:
 private:
     enum class state
     {
-        not_loaded,
-        loaded,
-        open
+        not_loaded, ///< Wallet data are not loaded, master password not initialized
+        loaded,     ///< Wallet was loaded from file, master password was not checked yet
+        open        ///< Master password check succeeded, wallet is open for reading
     };
 
     static std::unique_ptr<wallet> _instance;        ///< Wallet instance
     static constexpr uint32_t _max_field_size = 128; ///< Maximum size of id/username/password including terminating '\0'
 
-    state _state;
+    state _state;                 ///< Current wallet state
     std::string _master_password; ///< Master password for currently loaded wallet
     std::set<item_t> _items;      ///< Items stored in currently loaded wallet
 };
