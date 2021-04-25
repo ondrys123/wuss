@@ -1,7 +1,7 @@
 enclave {
    trusted {
         public int create_wallet([in, string]const char* mp_);
-        public int delete_wallet([in, string]const char* mp_);
+        public int delete_wallet();
         public int check_password([in, string]const char* mp_);
         public int change_master_password([in, string]const char* old_mp_,
                                           [in, string]const char* new_mp_);

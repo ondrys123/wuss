@@ -99,7 +99,7 @@ void io_handler::handle_create_new_wallet() noexcept
 void io_handler::handle_delete_wallet() noexcept
 {
     const std::string mp = io_handler::get_master_password();
-    enclave_wrapper::get_instance().delete_wallet(mp);
+    enclave_wrapper::get_instance().delete_wallet();
 }
 
 void io_handler::handle_new_entry() noexcept
@@ -160,6 +160,7 @@ void io_handler::handle_change_master_password() noexcept
 
 bool io_handler::check_master_password() noexcept
 {
+    enclave_wrapper::get_instance().check_password("master");
     return true;
 }
 
