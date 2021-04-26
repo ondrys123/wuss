@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../trusted/item.hpp"
+#include "sgx_error.h"
 #include <boost/core/noncopyable.hpp>
 #include <iostream>
 #include <optional>
@@ -16,7 +17,8 @@ private:
     struct token
     {}; // Constructor token
 
-public: // Constructors, static methods
+    // Constructors, static methods
+public:
     /** @brief Creates enclave **/
     enclave_wrapper(token);
 
@@ -29,7 +31,8 @@ public: // Constructors, static methods
     /** @brief Destroys enclave **/
     ~enclave_wrapper();
 
-public: // Public methods
+    // Public methods
+public:
     /**
      * @brief Returns enclave ID
      * @return encalve ID
@@ -94,11 +97,16 @@ public: // Public methods
      */
     std::vector<id_t> list_all_ids();
 
-
-public: // OCALL Handlers
+    // OCALL Handlers
+public:
     void on_error(const std::string& error_);
 
-private:                                             // Private members
+    // Private methods
+private:
+    static void throw_on_failure(sgx_status_t status_, const std::string& error_msg_ = "ECALL error");
+
+    // Private members
+private:
     static std::optional<enclave_wrapper> _instance; ///< Used enclave_wrapper instance
     sgx_enclave_id_t _eid{};                         ///< Enclave ID
 };
