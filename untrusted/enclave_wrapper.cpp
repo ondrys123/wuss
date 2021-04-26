@@ -44,7 +44,7 @@ enclave_wrapper::~enclave_wrapper()
 bool enclave_wrapper::create_wallet(const password_t& mp_)
 {
     int ret{};
-    auto status = ::create_wallet(_eid, &ret, mp_.c_str());
+    const auto status = ::create_wallet(_eid, &ret, mp_.c_str());
     throw_on_failure(status, "Failed to create wallet");
     return ret;
 }
@@ -52,7 +52,7 @@ bool enclave_wrapper::create_wallet(const password_t& mp_)
 bool enclave_wrapper::delete_wallet()
 {
     int ret{};
-    auto status = ::delete_wallet(_eid, &ret);
+    const auto status = ::delete_wallet(_eid, &ret);
     throw_on_failure(status, "Failed to delete enclave");
     return ret;
 }
@@ -60,7 +60,7 @@ bool enclave_wrapper::delete_wallet()
 bool enclave_wrapper::check_password(const password_t& mp_)
 {
     int ret{};
-    auto status = ::check_password(_eid, &ret, mp_.c_str());
+    const auto status = ::check_password(_eid, &ret, mp_.c_str());
     throw_on_failure(status, "Failed to check password");
     return ret;
 }
@@ -68,7 +68,7 @@ bool enclave_wrapper::check_password(const password_t& mp_)
 bool enclave_wrapper::change_master_password(const password_t& old_mp_, const password_t& new_mp_)
 {
     int ret{};
-    auto status = ::change_master_password(_eid, &ret, old_mp_.c_str(), new_mp_.c_str());
+    const auto status = ::change_master_password(_eid, &ret, old_mp_.c_str(), new_mp_.c_str());
     throw_on_failure(status, "Failed to change master password");
     return ret;
 }
@@ -76,7 +76,7 @@ bool enclave_wrapper::change_master_password(const password_t& old_mp_, const pa
 bool enclave_wrapper::add_item(const item_t& item_)
 {
     int ret{};
-    auto status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
+    const auto status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
     throw_on_failure(status, "Failed to add item into wallet");
     return ret;
 }
@@ -84,7 +84,7 @@ bool enclave_wrapper::add_item(const item_t& item_)
 bool enclave_wrapper::delete_item(const id_t& id_)
 {
     int ret{};
-    auto status = ::delete_item(_eid, &ret, id_.c_str());
+    const auto status = ::delete_item(_eid, &ret, id_.c_str());
     throw_on_failure(status, "Failed to delete item from wallet");
     return ret;
 }
@@ -92,8 +92,8 @@ bool enclave_wrapper::delete_item(const id_t& id_)
 std::optional<item_t> enclave_wrapper::show_item(const id_t& id_)
 {
     uint32_t max_size{};
-    auto status = ::get_max_field_size(_eid, &max_size);
-    auto buff   = std::make_unique<char[]>(max_size * 2);
+    auto status     = ::get_max_field_size(_eid, &max_size);
+    const auto buff = std::make_unique<char[]>(max_size * 2);
     throw_on_failure(status, "Failed to obtain max field size");
 
     int ret{};
@@ -117,7 +117,7 @@ std::vector<item_t> enclave_wrapper::show_all_items()
     uint32_t size{};
     auto status = ::get_wallet_total_size(_eid, &size);
     throw_on_failure(status, "Failed to obtain size of all items in wallet");
-    auto buff = std::make_unique<char[]>(size);
+    const auto buff = std::make_unique<char[]>(size);
     int ret{};
     status = ::show_all_items(_eid, &ret, buff.get(), size);
     if (!ret)
@@ -126,8 +126,8 @@ std::vector<item_t> enclave_wrapper::show_all_items()
     }
     throw_on_failure(status, "Failed to obtain wallet items");
     std::vector<item_t> result;
-    char* it        = buff.get();
-    const char* end = buff.get() + size;
+    const char* it        = buff.get();
+    const char* const end = buff.get() + size;
     while (it < end)
     {
         item_t item;
@@ -148,14 +148,14 @@ std::vector<id_t> enclave_wrapper::list_all_ids()
     auto status = ::get_ids_total_size(_eid, &size);
     throw_on_failure(status, "Failed to obtain size of all IDs");
 
-    auto buff = std::make_unique<char[]>(size);
+    const auto buff = std::make_unique<char[]>(size);
     int ret{};
     status = ::list_all_ids(_eid, &ret, buff.get(), size);
     throw_on_failure(status, "Failed to obtain IDs");
 
     std::vector<id_t> result;
-    char* it        = buff.get();
-    const char* end = buff.get() + size;
+    const char* it        = buff.get();
+    const char* const end = buff.get() + size;
     while (it < end)
     {
         result.emplace_back(it);
