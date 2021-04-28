@@ -11,23 +11,10 @@ std::unique_ptr<wallet> wallet::_instance = nullptr;
 wallet::wallet(wallet::token)
     : _state{state::not_loaded}
 {
-    // TODO: try load, if success, set state to loaded
     if (load_stored_wallet())
     {
         _state = state::loaded;
     }
-
-    // Test wallet, remove later:
-    /*_state           = state::loaded;
-    _master_password = "master";
-    _items.insert(item_t{"discord", "dude", "12345"});
-    _items.insert(item_t{"Facebook", "my.name@domain.com", "@ C0mpleX Pa$$word"});
-    _items.insert(item_t{"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                         "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-                         "..............................................................................................................................."});
-    _items.insert(item_t{"bank account", "9865 3223", "6666"}); 
-    update_stored_wallet();*/
-    
 
 }
 
@@ -104,7 +91,6 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
         on_error("[change_master_password] No wallet loaded");
         return false;
     } 
-    load_stored_wallet();
 
     if (!check_password(old_mp_))
     {
@@ -237,8 +223,6 @@ void wallet::on_error(const std::string& message_) const
 
 void wallet::update_stored_wallet() const
 {
-    // TODO Save new stuff to file
-
     size_t wallet_size = get_wallet_total_size() + _master_password.size() + 1;
     size_t sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
 
@@ -259,7 +243,6 @@ void wallet::update_stored_wallet() const
         output_++;
     }
 
-
     sgx_status_t sealing_status = seal_wallet(data.get(), wallet_size, (sgx_sealed_data_t*)sealed_data.get(), sealed_size);
 
     if (sealing_status != SGX_SUCCESS){
@@ -274,8 +257,7 @@ void wallet::update_stored_wallet() const
 }
 
 bool wallet::load_stored_wallet()
-    {
-    
+{
     size_t sealed_size;
     sgx_status_t status = get_file_size(&sealed_size);
     if (sealed_size == 0)
@@ -283,34 +265,24 @@ bool wallet::load_stored_wallet()
         return false;
     }
     
-
     size_t wallet_size = sealed_size - sizeof(sgx_sealed_data_t);
     uint32_t loaded_size = wallet_size;
-
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
-
     std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[wallet_size]);
-
-    
+ 
     int ret;
     bool stored_status = load_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS){
         on_error("[load_stored_wallet] Wallet not loaded from file");
     }
-
-
     sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data.get(), unsealed_data.get(), &loaded_size);
     if (sealing_status != SGX_SUCCESS){
         on_error("[load_stored_wallet] Wallet not unsealed");
     }
 
-    _master_password.clear();
-
     std::set<item_t> items;
-
     const char* it        = (char*)unsealed_data.get();
     const char* const end = (char*)unsealed_data.get() + loaded_size;
-
     _master_password = std::string{it};
     it += _master_password.size() + 1;
 
@@ -325,21 +297,7 @@ bool wallet::load_stored_wallet()
         it += item.password.size() + 1;
         items.emplace(std::move(item));
     }
-
     _items = items;
-
-    on_error("LOADED MP:" + std::to_string(_master_password.size()) + " '" + _master_password + "'");
-
-    for (const item_t& item : _items)
-    {
-        on_error("LOADED ITEM ID:" + item.id);
-        on_error("LOADED ITEM NAME:" + item.username);
-        on_error("LOADED ITEM PW:" + item.password);
-    }
-
     return true;
-
-    } 
-
-
+} 
 } // namespace wuss
