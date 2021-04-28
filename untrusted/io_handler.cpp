@@ -118,7 +118,38 @@ void io_handler::handle_new_entry()
 
 void io_handler::handle_edit_entry()
 {
-    std::cout << "Editing entry is not implemented\n";
+    if (!check_master_password()) 
+    {
+        return;
+    }
+
+    const std::string id = io_handler::get_item_id();
+    const auto old_item = enclave_wrapper::get_instance().show_item(id);
+    if (!old_item)
+    {
+        std::cout << "Entry with given id not found.\n";
+        return;
+    }
+
+    item_t new_item;
+    const auto& new_id = io_handler::read_input("Enter new id: ");
+    new_item.id = (new_id.empty()) ? old_item->id : new_id;
+
+    const auto& new_username = io_handler::read_input("Enter new username: ");
+    new_item.username = (new_username.empty()) ? old_item->username : new_username;
+    
+    const auto& new_password = io_handler::read_input("Enter new password: ");
+    new_item.password = (new_password.empty()) ? old_item->password : new_password;
+
+    if (!enclave_wrapper::get_instance().delete_item(id)) 
+    {
+        std::cout << "Failed to edit entry\n";
+    }
+
+    if (!enclave_wrapper::get_instance().add_item(new_item)) 
+    {
+        std::cout << "Failed to edit entry\n";
+    }
 }
 
 void io_handler::handle_view_entry()
@@ -126,7 +157,16 @@ void io_handler::handle_view_entry()
     if (check_master_password())
     {
         const std::string id = io_handler::get_item_id();
-        enclave_wrapper::get_instance().show_item(id);
+        const auto item = enclave_wrapper::get_instance().show_item(id);
+        if (!item) 
+        {
+            std::cerr << "Failed to show entry\n";
+            return;
+        }
+
+        std::cout << "Id: " << item->id << "\n";
+        std::cout << "Username: " << item->username << "\n";
+        std::cout << "Password: " << item->password << "\n";
     }
 }
 
@@ -135,7 +175,10 @@ void io_handler::handle_remove_entry()
     if (check_master_password())
     {
         const std::string id = io_handler::get_item_id();
-        enclave_wrapper::get_instance().delete_item(id);
+        if (!enclave_wrapper::get_instance().delete_item(id)) 
+        {
+            std::cerr << "Failed to remove entry.\n";
+        }
     }
 }
 
@@ -143,7 +186,6 @@ void io_handler::handle_view_all_entries()
 {
     if (check_master_password())
     {
-        //        enclave_wrapper::get_instance().show_all_items();
         for (const auto& v : enclave_wrapper::get_instance().list_all_ids())
         {
             std::cout << "'" << v << "'" << std::endl;
@@ -158,15 +200,15 @@ void io_handler::handle_change_master_password()
     enclave_wrapper::get_instance().change_master_password(mp, new_mp);
 }
 
-bool io_handler::check_master_password()
-{
-    enclave_wrapper::get_instance().check_password("master");
-    return true;
-}
-
 std::string io_handler::get_master_password()
 {
     return io_handler::read_input("Enter master password: ");
+}
+
+bool io_handler::check_master_password()
+{
+    const auto& password = io_handler::get_master_password();
+    return enclave_wrapper::get_instance().check_password(password);
 }
 
 std::string io_handler::get_item_id()
