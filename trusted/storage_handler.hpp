@@ -1,3 +1,4 @@
+#pragma once
 
 #include "wallet.hpp"
 #include "sgx_trts.h"
