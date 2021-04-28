@@ -25,6 +25,7 @@ enclave {
 
     untrusted {
         void on_error([in, string]const char* message_);
+        size_t get_file_size();
         int store_wallet([in, size=sealed_size]const uint8_t* sealed_data,
                             size_t sealed_size);
         int load_wallet([out, size=sealed_size]uint8_t* sealed_data,

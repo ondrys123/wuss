@@ -100,6 +100,7 @@ public:
     // OCALL Handlers
 public:
     void on_error(const std::string& error_);
+    size_t get_file_size();
     int store_wallet(const uint8_t* sealed_data, const size_t sealed_size);
     int load_wallet(uint8_t* sealed_data, const size_t sealed_size);
     int wallet_exists(void);

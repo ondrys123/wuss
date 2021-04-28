@@ -200,6 +200,10 @@ int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t seale
 }
 
 
+size_t enclave_wrapper::get_file_size(){
+    return std::filesystem::file_size(WALLET_FILE);
+}
+
 int enclave_wrapper::load_wallet(uint8_t* sealed_data, const size_t sealed_size)
 {
     std::ifstream file(WALLET_FILE, std::ios::in | std::ios::binary);
@@ -215,6 +219,7 @@ int enclave_wrapper::wallet_exists(void){
     file.close();
     return 1;
 }
+
 
 
 

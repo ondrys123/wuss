@@ -54,13 +54,13 @@ bool wallet::create_wallet(const password_t& mp_)
     _master_password = mp_;
     _items.clear();
     _state = state::open;
-    update_stored_wallet( *_instance );
+    update_stored_wallet();
     return true;
 }
 
 bool wallet::delete_wallet()
 {
-    wallet& wal = load_stored_wallet();
+    load_stored_wallet();
 
     /*if (_state != state::open)
     {
@@ -99,7 +99,7 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
         on_error("[change_master_password] No wallet loaded");
         return false;
     } */
-    wallet& wal = load_stored_wallet();
+    load_stored_wallet();
 
     if (!check_password(old_mp_))
     {
@@ -108,7 +108,7 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
     }
     _master_password = new_mp_;
     _state           = state::open;
-    update_stored_wallet( *_instance);
+    update_stored_wallet();
     return true;
 }
 
@@ -128,7 +128,7 @@ bool wallet::add_item(const item_t& item_)
         return false;
     }
     _items.insert(item_);
-    update_stored_wallet( *_instance);
+    update_stored_wallet();
     return true;
 }
 
@@ -183,7 +183,6 @@ std::set<item_t> wallet::show_all_items() const
 
 std::vector<id_t> wallet::list_all_ids() const
 {
-    load_stored_wallet(); 
     /*if (_state != state::open)
     {
         on_error("[list_all_ids] Wallet not open");
@@ -232,50 +231,52 @@ void wallet::on_error(const std::string& message_) const
 /******************************* Private methods ********************************/
 /********************************************************************************/
 
-void wallet::update_stored_wallet(wallet& wal) const
+void wallet::update_stored_wallet() const
 {
     // TODO Save new stuff to file
-    size_t sealed_size = sizeof(sgx_sealed_data_t) + sizeof(wallet);
-    uint8_t* sealed_data = (uint8_t*)malloc(sealed_size);
-    sgx_status_t sealing_status = seal_wallet(&wal, (sgx_sealed_data_t*)sealed_data, sealed_size);
+
+    size_t wallet_size = get_wallet_total_size();
+    size_t sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
+
+    std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
+
+    std::unique_ptr<uint8_t[]> data(new uint8_t[sealed_size]);
+
+    sgx_status_t sealing_status = seal_wallet(data.get(), wallet_size, (sgx_sealed_data_t*)sealed_data.get(), sealed_size);
 
     if (sealing_status != SGX_SUCCESS){
-        free(sealed_data);
         on_error("[update_stored_wallet] Wallet not sealed");
     }
-    /*if (sealing_status == SGX_SUCCESS){
-        on_error("[update_stored_wallet] Wallet sealed");
-    }*/
 
     int ret;
-    sgx_status_t stored_status = store_wallet(&ret, sealed_data, sealed_size);
-    free(sealed_data);
+    sgx_status_t stored_status = store_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS){
         on_error("[update_stored_wallet] Wallet not stored to file");
     }  
 }
 
-wallet& wallet::load_stored_wallet() const
+void wallet::load_stored_wallet()
     {
-    uint32_t wallet_size = sizeof(wallet);
-    size_t sealed_size = sizeof(sgx_sealed_data_t) + wallet_size;
-    uint8_t* sealed_data = (uint8_t*)malloc(sealed_size);
-    int ret;
+    size_t sealed_size;
+    uint32_t wallet_size = get_wallet_total_size();
+    sgx_status_t status = get_file_size(&sealed_size);
 
-    bool stored_status = load_wallet(&ret, sealed_data, sealed_size);
+    std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
+
+    std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[sealed_size]);
+
+    
+    int ret;
+    bool stored_status = load_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS){
-        free(sealed_data);
         on_error("[load_stored_wallet] Wallet not loaded from file");
     }
 
-    wallet& wal = get_instance();
 
-    sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data, &wal, wallet_size);
+    sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data.get(), unsealed_data.get(), sealed_size);
     if (sealing_status != SGX_SUCCESS){
-        free(sealed_data);
         on_error("[load_stored_wallet] Wallet not unsealed");
     }
-    return wal;
 
     } 
 
