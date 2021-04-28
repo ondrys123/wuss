@@ -32,9 +32,9 @@ wallet& wallet::get_instance()
 bool wallet::create_wallet(const password_t& mp_)
 {
     int ret;
-    sgx_status_t status = wallet_exists(&ret);
+    wallet_exists(&ret);
     if (ret !=0) {
-         on_error("wallet already exists");
+         on_error("[create_wallet] Wallet already exists");
     }
 
     if (_state != state::not_loaded)
