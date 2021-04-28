@@ -51,11 +51,6 @@ public:
     void update_stored_wallet() const;
     bool load_stored_wallet();
 
-    // Private methods
-private:
-    //void update_stored_wallet() const;
-    //void load_stored_wallet() const;
-    
     // Private members
 private:
     enum class state

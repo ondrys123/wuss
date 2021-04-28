@@ -223,17 +223,16 @@ void wallet::on_error(const std::string& message_) const
 
 void wallet::update_stored_wallet() const
 {
-    size_t wallet_size = get_wallet_total_size() + _master_password.size() + 1;
-    size_t sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
+    const auto wallet_size = get_wallet_total_size() + _master_password.size() + 1;
+    const auto sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
 
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
-
     std::unique_ptr<uint8_t[]> data(new uint8_t[sealed_size]);
 
     auto* output_ = data.get();
     output_ = std::copy(_master_password.begin(), _master_password.end(), output_);
     output_++;
-    for (const item_t& item : _items)
+    for (const auto& item : _items)
     {
         output_ = std::copy(item.id.begin(), item.id.end(), output_);
         output_++;
@@ -246,38 +245,38 @@ void wallet::update_stored_wallet() const
     sgx_status_t sealing_status = seal_wallet(data.get(), wallet_size, (sgx_sealed_data_t*)sealed_data.get(), sealed_size);
 
     if (sealing_status != SGX_SUCCESS){
-        on_error("[update_stored_wallet] Wallet not sealed");
+        on_error("[update_stored_wallet] Failed to seale wallet");
     }
 
     int ret;
     sgx_status_t stored_status = store_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS){
-        on_error("[update_stored_wallet] Wallet not stored to file");
+        on_error("[update_stored_wallet] Failed to to store wallet");
     }  
 }
 
 bool wallet::load_stored_wallet()
 {
     size_t sealed_size;
-    sgx_status_t status = get_file_size(&sealed_size);
+    const auto status = get_file_size(&sealed_size);
     if (sealed_size == 0)
     {
         return false;
     }
     
-    size_t wallet_size = sealed_size - sizeof(sgx_sealed_data_t);
+    const size_t wallet_size = sealed_size - sizeof(sgx_sealed_data_t);
     uint32_t loaded_size = wallet_size;
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
     std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[wallet_size]);
  
     int ret;
-    bool stored_status = load_wallet(&ret, sealed_data.get(), sealed_size);
-    if (ret != 0 || stored_status != SGX_SUCCESS){
-        on_error("[load_stored_wallet] Wallet not loaded from file");
+    const auto load_success = load_wallet(&ret, sealed_data.get(), sealed_size);
+    if (ret != 0 || load_success != SGX_SUCCESS){
+        on_error("[load_stored_wallet] Failed to load wallet from file");
     }
     sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data.get(), unsealed_data.get(), &loaded_size);
     if (sealing_status != SGX_SUCCESS){
-        on_error("[load_stored_wallet] Wallet not unsealed");
+        on_error("[load_stored_wallet] Failed to open wallet");
     }
 
     std::set<item_t> items;
