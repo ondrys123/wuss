@@ -3,6 +3,7 @@
 #include "enclave_t.h"
 #include <numeric>
 
+
 namespace wuss
 {
 std::unique_ptr<wallet> wallet::_instance = nullptr;
@@ -11,6 +12,10 @@ wallet::wallet(wallet::token)
     : _state{state::not_loaded}
 {
     // TODO: try load, if success, set state to loaded
+    if (load_stored_wallet())
+    {
+        _state = state::loaded;
+    }
 
     // Test wallet, remove later:
     /*_state           = state::loaded;
@@ -21,8 +26,8 @@ wallet::wallet(wallet::token)
                          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                          "..............................................................................................................................."});
     _items.insert(item_t{"bank account", "9865 3223", "6666"}); 
-    update_stored_wallet(*_instance);
-    */
+    update_stored_wallet();*/
+    
 
 }
 
@@ -45,12 +50,12 @@ bool wallet::create_wallet(const password_t& mp_)
          on_error("wallet already exists");
     }
 
-    /*if (_state != state::not_loaded)
+    if (_state != state::not_loaded)
     {
         on_error("[create_wallet] wallet is already loaded");
         return false;
     }
-*/
+
     _master_password = mp_;
     _items.clear();
     _state = state::open;
@@ -62,26 +67,26 @@ bool wallet::delete_wallet()
 {
     load_stored_wallet();
 
-    /*if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[delete_wallet] Wallet not open");
         return false;
-    }*/
+    }
 
     _master_password.clear();
     _items.clear();
     _state = state::not_loaded;
-    //update_stored_wallet();
+    update_stored_wallet();
     return true;
 }
 
 bool wallet::check_password(const password_t& mp_)
 {
-    /*if (_state == state::not_loaded)
+    if (_state == state::not_loaded)
     {
         on_error("[check_password] No wallet loaded");
         return false;
-    }*/
+    }
 
     if (mp_ == _master_password)
     {
@@ -94,11 +99,11 @@ bool wallet::check_password(const password_t& mp_)
 bool wallet::change_master_password(const password_t& old_mp_, const password_t& new_mp_)
 {
 
-    /*if (_state == state::not_loaded)
+    if (_state == state::not_loaded)
     {
         on_error("[change_master_password] No wallet loaded");
         return false;
-    } */
+    } 
     load_stored_wallet();
 
     if (!check_password(old_mp_))
@@ -114,12 +119,12 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
 
 bool wallet::add_item(const item_t& item_)
 {
-    /*if (_state != state::open)
+
+    if (_state != state::open)
     {
         on_error("[add_item] Wallet not open");
         return false;
-    }*/
-    load_stored_wallet();
+    }
 
     const auto it = std::find_if(_items.begin(), _items.end(), [id = item_.id](const auto& i_) { return i_.id == id; });
     if (it != _items.end())
@@ -134,11 +139,11 @@ bool wallet::add_item(const item_t& item_)
 
 bool wallet::delete_item(const id_t& id_)
 {
-    /*if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[delete_item] Wallet not open");
         return false;
-    }*/
+    }
 
     const auto it = std::find_if(_items.begin(), _items.end(), [&id_](const auto& i_) { return i_.id == id_; });
     if (it == _items.end())
@@ -147,18 +152,18 @@ bool wallet::delete_item(const id_t& id_)
         return false;
     }
     _items.erase(it);
-    //update_stored_wallet();
+    update_stored_wallet();
     return true;
 }
 
 bool wallet::show_item(const id_t& id_, login_t& login_, password_t& password_) const
 {
-    /*if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[show_item] Wallet not open");
         return false;
     }
-    */
+    
     const auto it = std::find_if(_items.begin(), _items.end(), [&id_](const auto& i_) { return i_.id == id_; });
     if (it == _items.end())
     {
@@ -172,22 +177,21 @@ bool wallet::show_item(const id_t& id_, login_t& login_, password_t& password_) 
 
 std::set<item_t> wallet::show_all_items() const
 {
-   /* if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[show_all_items] Wallet not open");
         return {};
-    }*/
-
+    }
     return _items;
 }
 
 std::vector<id_t> wallet::list_all_ids() const
 {
-    /*if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[list_all_ids] Wallet not open");
         return {};
-    }*/
+    }
 
     std::vector<id_t> result;
     std::transform(_items.begin(), _items.end(), std::back_inserter(result), [](const auto& i_) { return i_.id; });
@@ -201,22 +205,22 @@ uint32_t wallet::get_max_field_size() const
 
 uint32_t wallet::get_ids_total_size() const
 {
-   /* if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[get_ids_total_size] Wallet not open");
         return 0;
-    }*/
+    }
 
     return std::accumulate(_items.begin(), _items.end(), 0ul, [](uint32_t acc_, const auto& i_) { return acc_ + i_.id.size() + 1; });
 }
 
 uint32_t wallet::get_wallet_total_size() const
 {
-    /*if (_state != state::open)
+    if (_state != state::open)
     {
         on_error("[get_wallet_total_size] Wallet not open");
         return 0;
-    }*/
+    }
     const auto acc = [](uint32_t acc_, const auto& i_) { return acc_ + i_.id.size() + i_.username.size() + i_.password.size() + 3; };
     return std::accumulate(_items.begin(), _items.end(), 0ul, acc);
 }
@@ -235,12 +239,13 @@ void wallet::update_stored_wallet() const
 {
     // TODO Save new stuff to file
 
-    size_t wallet_size = get_wallet_total_size();
+    size_t wallet_size = get_wallet_total_size() + _master_password.size() + 1;
     size_t sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
 
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
 
     std::unique_ptr<uint8_t[]> data(new uint8_t[sealed_size]);
+    std::copy(_master_password.begin(), _master_password.end(), data.get());
 
     sgx_status_t sealing_status = seal_wallet(data.get(), wallet_size, (sgx_sealed_data_t*)sealed_data.get(), sealed_size);
 
@@ -255,15 +260,23 @@ void wallet::update_stored_wallet() const
     }  
 }
 
-void wallet::load_stored_wallet()
+bool wallet::load_stored_wallet()
     {
+    
     size_t sealed_size;
-    uint32_t wallet_size = get_wallet_total_size();
     sgx_status_t status = get_file_size(&sealed_size);
+    if (sealed_size == 0)
+    {
+        return false;
+    }
+    
+
+    size_t wallet_size = sealed_size - sizeof(sgx_sealed_data_t);
+    uint32_t loaded_size = wallet_size;
 
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
 
-    std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[sealed_size]);
+    std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[wallet_size]);
 
     
     int ret;
@@ -273,11 +286,19 @@ void wallet::load_stored_wallet()
     }
 
 
-    sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data.get(), unsealed_data.get(), sealed_size);
+    sgx_status_t sealing_status = unseal_wallet((sgx_sealed_data_t*)sealed_data.get(), unsealed_data.get(), &loaded_size);
     if (sealing_status != SGX_SUCCESS){
         on_error("[load_stored_wallet] Wallet not unsealed");
     }
 
+    _master_password.clear();
+    std::copy_n(unsealed_data.get(), loaded_size-1, std::back_inserter(_master_password));
+
+    on_error("LOADED MP:" + std::to_string(_master_password.size()) + " '" + _master_password + "'");
+
+    return true;
+
     } 
+
 
 } // namespace wuss

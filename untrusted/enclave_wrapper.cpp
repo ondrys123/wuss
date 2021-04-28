@@ -201,7 +201,11 @@ int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t seale
 
 
 size_t enclave_wrapper::get_file_size(){
-    return std::filesystem::file_size(WALLET_FILE);
+    if (std::filesystem::exists(WALLET_FILE))
+    {
+        return std::filesystem::file_size(WALLET_FILE);
+    }
+    return 0;
 }
 
 int enclave_wrapper::load_wallet(uint8_t* sealed_data, const size_t sealed_size)

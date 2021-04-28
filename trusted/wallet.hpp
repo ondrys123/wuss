@@ -49,7 +49,7 @@ public:
 public:
     void on_error(const std::string& message_) const;
     void update_stored_wallet() const;
-    void load_stored_wallet();
+    bool load_stored_wallet();
 
     // Private methods
 private:
