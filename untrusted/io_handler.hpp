@@ -19,6 +19,7 @@ enum class action_t
     edit_entry,
     view_entry,
     remove_entry,
+    view_all_ids,
     view_all_entries,
     change_master_password
 };
@@ -36,6 +37,7 @@ private:
     static void handle_edit_entry();
     static void handle_view_entry();
     static void handle_remove_entry();
+    static void handle_view_all_ids();
     static void handle_view_all_entries();
     static void handle_change_master_password();
     static bool check_master_password();
