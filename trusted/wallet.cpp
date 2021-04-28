@@ -245,7 +245,20 @@ void wallet::update_stored_wallet() const
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
 
     std::unique_ptr<uint8_t[]> data(new uint8_t[sealed_size]);
-    std::copy(_master_password.begin(), _master_password.end(), data.get());
+
+    auto* output_ = data.get();
+    output_ = std::copy(_master_password.begin(), _master_password.end(), output_);
+    output_++;
+    for (const item_t& item : _items)
+    {
+        output_ = std::copy(item.id.begin(), item.id.end(), output_);
+        output_++;
+        output_ = std::copy(item.username.begin(), item.username.end(), output_);
+        output_++;
+        output_ = std::copy(item.password.begin(), item.password.end(), output_);
+        output_++;
+    }
+
 
     sgx_status_t sealing_status = seal_wallet(data.get(), wallet_size, (sgx_sealed_data_t*)sealed_data.get(), sealed_size);
 
@@ -292,9 +305,37 @@ bool wallet::load_stored_wallet()
     }
 
     _master_password.clear();
-    std::copy_n(unsealed_data.get(), loaded_size-1, std::back_inserter(_master_password));
+
+    std::set<item_t> items;
+
+    const char* it        = (char*)unsealed_data.get();
+    const char* const end = (char*)unsealed_data.get() + loaded_size;
+
+    _master_password = std::string{it};
+    it += _master_password.size() + 1;
+
+    while (it < end)
+    {
+        item_t item;
+        item.id = std::string{it};
+        it += item.id.size() + 1;
+        item.username = std::string{it};
+        it += item.username.size() + 1;
+        item.password = std::string{it};
+        it += item.password.size() + 1;
+        items.emplace(std::move(item));
+    }
+
+    _items = items;
 
     on_error("LOADED MP:" + std::to_string(_master_password.size()) + " '" + _master_password + "'");
+
+    for (const item_t& item : _items)
+    {
+        on_error("LOADED ITEM ID:" + item.id);
+        on_error("LOADED ITEM NAME:" + item.username);
+        on_error("LOADED ITEM PW:" + item.password);
+    }
 
     return true;
 
