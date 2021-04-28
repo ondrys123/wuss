@@ -96,20 +96,39 @@ void io_handler::handle_help(const po::options_description& description_)
 void io_handler::handle_create_new_wallet()
 {
     const std::string mp = io_handler::read_input("Enter new master password: ");
-    std::cout << "New master password:" << mp << std::endl;
-    enclave_wrapper::get_instance().create_wallet(mp);
+    if (enclave_wrapper::get_instance().create_wallet(mp)) 
+    {
+        std::cout << "New wallet created with master password: " << mp << "\n";
+    } 
+    else
+    {
+        std::cout << "Failed to create new wallet\n";
+    }
 }
 
 void io_handler::handle_delete_wallet()
 {
-    const std::string mp = io_handler::get_master_password();
-    enclave_wrapper::get_instance().delete_wallet();
+    if (!check_master_password())
+    {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    if (enclave_wrapper::get_instance().delete_wallet()) 
+    {
+        std::cout << "Wallet successfully deleted\n";
+    }
+    else
+    {
+        std::cout << "Failed to delete wallet\n";
+    }
 }
 
 void io_handler::handle_new_entry()
 {
     if (!check_master_password())
     {
+        std::cout << "Incorrect password\n";
         return;
     }
 
@@ -124,6 +143,7 @@ void io_handler::handle_edit_entry()
 {
     if (!check_master_password()) 
     {
+        std::cout << "Incorrect password\n";
         return;
     }
 
@@ -136,13 +156,13 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    const auto& new_id = io_handler::read_input("Enter new id: ");
+    const auto& new_id = io_handler::read_input("Enter new id (skip for no change): ");
     new_item.id = (new_id.empty()) ? old_item->id : new_id;
 
-    const auto& new_username = io_handler::read_input("Enter new username: ");
+    const auto& new_username = io_handler::read_input("Enter new username (skip for no change): ");
     new_item.username = (new_username.empty()) ? old_item->username : new_username;
     
-    const auto& new_password = io_handler::read_input("Enter new password: ");
+    const auto& new_password = io_handler::read_input("Enter new password (skip for no change): ");
     new_item.password = (new_password.empty()) ? old_item->password : new_password;
 
     if (!enclave_wrapper::get_instance().delete_item(id)) 
@@ -158,30 +178,40 @@ void io_handler::handle_edit_entry()
 
 void io_handler::handle_view_entry()
 {
-    if (check_master_password())
+    if (!check_master_password())
     {
-        const std::string id = io_handler::get_item_id();
-        const auto item = enclave_wrapper::get_instance().show_item(id);
-        if (!item) 
-        {
-            std::cout << "Failed to show entry\n";
-            return;
-        }
-
-        std::cout << "Username: " << item->username << "\n";
-        std::cout << "Password: " << item->password << "\n";
+        std::cout << "Incorrect password\n";
+        return;
     }
+
+    const std::string id = io_handler::get_item_id();
+    const auto item = enclave_wrapper::get_instance().show_item(id);
+    if (!item) 
+    {
+        std::cout << "Failed to show entry\n";
+        return;
+    }
+
+    std::cout << "Username: " << item->username << "\n";
+    std::cout << "Password: " << item->password << "\n";
 }
 
 void io_handler::handle_remove_entry()
 {
-    if (check_master_password())
+    if(!check_master_password())
     {
-        const std::string id = io_handler::get_item_id();
-        if (!enclave_wrapper::get_instance().delete_item(id)) 
-        {
-            std::cout << "Failed to remove entry.\n";
-        }
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    const std::string id = io_handler::get_item_id();
+    if (enclave_wrapper::get_instance().delete_item(id)) 
+    {
+        std::cout << "Entry \"" << id << "\" successfully removed\n";
+    }
+    else 
+    {
+        std::cout << "Failed to remove entry\n";
     }
 }
 
@@ -189,6 +219,7 @@ void io_handler::handle_view_all_ids()
 {
     if (!check_master_password())
     {
+        std::cout << "Incorrect password\n";
         return;
     }
     
