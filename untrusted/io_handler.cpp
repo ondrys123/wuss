@@ -83,26 +83,26 @@ int io_handler::run(std::size_t argc, char* argv[])
     return 0;
 }
 
-void io_handler::handle_help(const po::options_description& description_) noexcept
+void io_handler::handle_help(const po::options_description& description_)
 {
     std::cout << "Usage: options_description [options]\n";
     std::cout << description_;
 }
 
-void io_handler::handle_create_new_wallet() noexcept
+void io_handler::handle_create_new_wallet()
 {
     const std::string mp = io_handler::read_input("Enter new master password: ");
     std::cout << "New master password:" << mp << std::endl;
     enclave_wrapper::get_instance().create_wallet(mp);
 }
 
-void io_handler::handle_delete_wallet() noexcept
+void io_handler::handle_delete_wallet()
 {
     const std::string mp = io_handler::get_master_password();
     enclave_wrapper::get_instance().delete_wallet();
 }
 
-void io_handler::handle_new_entry() noexcept
+void io_handler::handle_new_entry()
 {
     if (!check_master_password())
     {
@@ -116,12 +116,12 @@ void io_handler::handle_new_entry() noexcept
     enclave_wrapper::get_instance().add_item(entry);
 }
 
-void io_handler::handle_edit_entry() noexcept
+void io_handler::handle_edit_entry()
 {
     std::cout << "Editing entry is not implemented\n";
 }
 
-void io_handler::handle_view_entry() noexcept
+void io_handler::handle_view_entry()
 {
     if (check_master_password())
     {
@@ -130,7 +130,7 @@ void io_handler::handle_view_entry() noexcept
     }
 }
 
-void io_handler::handle_remove_entry() noexcept
+void io_handler::handle_remove_entry()
 {
     if (check_master_password())
     {
@@ -139,7 +139,7 @@ void io_handler::handle_remove_entry() noexcept
     }
 }
 
-void io_handler::handle_view_all_entries() noexcept
+void io_handler::handle_view_all_entries()
 {
     if (check_master_password())
     {
@@ -151,40 +151,40 @@ void io_handler::handle_view_all_entries() noexcept
     }
 }
 
-void io_handler::handle_change_master_password() noexcept
+void io_handler::handle_change_master_password()
 {
     const std::string mp     = io_handler::get_master_password();
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
     enclave_wrapper::get_instance().change_master_password(mp, new_mp);
 }
 
-bool io_handler::check_master_password() noexcept
+bool io_handler::check_master_password()
 {
     enclave_wrapper::get_instance().check_password("master");
     return true;
 }
 
-std::string io_handler::get_master_password() noexcept
+std::string io_handler::get_master_password()
 {
     return io_handler::read_input("Enter master password: ");
 }
 
-std::string io_handler::get_item_id() noexcept
+std::string io_handler::get_item_id()
 {
     return io_handler::read_input("Enter id of the entry: ");
 }
 
-std::string io_handler::get_item_login() noexcept
+std::string io_handler::get_item_login()
 {
     return io_handler::read_input("Enter login of the entry: ");
 }
 
-std::string io_handler::get_item_password() noexcept
+std::string io_handler::get_item_password()
 {
     return io_handler::read_input("Enter password of the entry: ");
 }
 
-std::string io_handler::read_input(const std::string& output) noexcept
+std::string io_handler::read_input(const std::string& output)
 {
     if (!output.empty())
     {
