@@ -141,6 +141,16 @@ void io_handler::handle_new_entry()
 
 void io_handler::handle_edit_entry()
 {
+    const auto gn = [](std::string type, std::string old_value){
+        const auto change = io_handler::read_input("Do you want to change value of " + type + "? (y/n): ");
+        if (change == "n") 
+        {
+            return old_value;
+        }
+
+        return io_handler::read_input("Enter new value of " + type + ": ");
+    };
+
     if (!check_master_password()) 
     {
         std::cout << "Incorrect password\n";
@@ -156,18 +166,14 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    const auto& new_id = io_handler::read_input("Enter new id (skip for no change): ");
-    new_item.id = (new_id.empty()) ? old_item->id : new_id;
-
-    const auto& new_username = io_handler::read_input("Enter new username (skip for no change): ");
-    new_item.username = (new_username.empty()) ? old_item->username : new_username;
-    
-    const auto& new_password = io_handler::read_input("Enter new password (skip for no change): ");
-    new_item.password = (new_password.empty()) ? old_item->password : new_password;
+    new_item.id = gn("item", old_item->id);
+    new_item.username = gn("username", old_item->username);
+    new_item.password = gn("password", old_item->password);
 
     if (!enclave_wrapper::get_instance().delete_item(id)) 
     {
         std::cout << "Failed to edit entry\n";
+        return;
     }
 
     if (!enclave_wrapper::get_instance().add_item(new_item)) 
