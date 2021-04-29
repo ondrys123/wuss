@@ -31,7 +31,7 @@ struct run_result
     }
     const run_result& wallet_exists() const
     {
-        CHECK(std::filesystem::is_regular_file(test_wallet));
+        CHECK(fs::is_regular_file(test_wallet));
         return *this;
     }
 };
@@ -72,9 +72,9 @@ const std::string test_mp = "P@$$W0rd322";
 
 inline void clean_wallet_file()
 {
-    if (std::filesystem::exists(test_wallet))
+    if (fs::exists(test_wallet))
     {
-        std::filesystem::remove(test_wallet);
+        fs::remove(test_wallet);
     }
 }
 
@@ -232,7 +232,7 @@ SCENARIO("Deleting existing wallet")
         WHEN("We try to delete with correct password")
         {
             r = run_wuss({"-d"}, {test_mp});
-            THEN("File is gone") { CHECK(!std::filesystem::is_regular_file("wallet.seal")); }
+            THEN("File is gone") { CHECK(!fs::is_regular_file(test_wallet)); }
         }
     }
 }

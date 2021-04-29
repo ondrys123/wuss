@@ -60,7 +60,11 @@ bool enclave_wrapper::delete_wallet()
 {
     int ret{};
     const auto status = ::delete_wallet(_eid, &ret);
-    throw_on_failure(status, "Failed to delete enclave");
+    throw_on_failure(status, "Failed to delete wallet");
+    if (ret)
+    {
+        ret = std::filesystem::remove(_wallet_path);
+    }
     return ret;
 }
 
