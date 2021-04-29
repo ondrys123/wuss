@@ -1,6 +1,6 @@
 #include "wallet.hpp"
-#include "storage_handler.hpp"
 #include "enclave_t.h"
+#include "storage_handler.hpp"
 #include <numeric>
 
 namespace wuss
@@ -230,8 +230,10 @@ void wallet::update_stored_wallet() const
     const auto wallet_size = get_wallet_total_size() + _master_password.size() + 1;
     const auto sealed_size = wallet_size + sizeof(sgx_sealed_data_t);
 
+    std::unique_ptr<uint8_t[]> data(new uint8_t[wallet_size]);
     std::unique_ptr<uint8_t[]> sealed_data(new uint8_t[sealed_size]);
-    std::unique_ptr<uint8_t[]> data(new uint8_t[sealed_size]);
+    std::fill_n(data.get(), wallet_size, 0);
+    std::fill_n(sealed_data.get(), sealed_size, 0);
 
     auto* output = data.get();
     output       = std::copy(_master_password.begin(), _master_password.end(), output);
