@@ -287,7 +287,14 @@ void io_handler::handle_change_master_password()
 {
     const std::string mp     = io_handler::get_master_password();
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
-    enclave_wrapper::get_instance().change_master_password(mp, new_mp);
+    if (enclave_wrapper::get_instance().change_master_password(mp, new_mp))
+    {
+        std::cout << "Master password changed successfully" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to change master password" << std::endl;
+    }
 }
 
 std::string io_handler::get_master_password()
