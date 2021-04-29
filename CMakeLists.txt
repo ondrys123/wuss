@@ -47,8 +47,8 @@ add_dependencies(wuss ${signed_target})
 target_link_libraries(wuss PUBLIC Boost::program_options)
 
 # Define "trusted/trusted.signed.so"
-target_compile_definitions(wuss PUBLIC SIGNED_LIB="trusted/${signed_lib}")
-
+get_filename_component(SIGNED_LIB_PATH ${CMAKE_BINARY_DIR}/trusted/${signed_lib} REALPATH)
+target_compile_definitions(wuss PUBLIC SIGNED_LIB="${SIGNED_LIB_PATH}")
 
 # Unused variables
 if(QT_QMAKE_EXECUTABLE)
