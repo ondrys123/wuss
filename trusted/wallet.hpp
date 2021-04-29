@@ -34,6 +34,7 @@ public:
     bool create_wallet(const password_t& mp_);
     bool delete_wallet();
     bool check_password(const password_t& mp_);
+    bool check_password_policy(const password_t& mp_);
     bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
     bool add_item(const item_t& item_);
     bool delete_item(const id_t& id_);
