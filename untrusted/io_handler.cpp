@@ -101,6 +101,7 @@ void io_handler::handle_help(const po::options_description& description_)
 
 void io_handler::handle_create_new_wallet()
 {
+    std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string mp = io_handler::read_input("Enter new master password: ");
     if (enclave_wrapper::get_instance().create_wallet(mp)) 
     {
@@ -322,6 +323,7 @@ void io_handler::handle_view_all_entries()
 void io_handler::handle_change_master_password()
 {
     const std::string mp     = io_handler::get_master_password();
+    std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
     enclave_wrapper::get_instance().change_master_password(mp, new_mp);
 }
