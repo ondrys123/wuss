@@ -99,13 +99,13 @@ bool wallet::check_password(const password_t& mp_)
     }
 
     sgx_sha256_hash_t old_pswd_hash = {0};
-    if (sgx_sha256_msg((const uint8_t *) mp_.data(), mp_.size(), &old_pswd_hash) != SGX_SUCCESS) {
+    if (sgx_sha256_msg(reinterpret_cast<const uint8_t *>(mp_.data()), mp_.size(), &old_pswd_hash) != SGX_SUCCESS) {
         on_error("[check_password] Unable to compare passwords");
         return false;
     }
 
     sgx_sha256_hash_t new_pswd_hash = {0};
-    if (sgx_sha256_msg((const uint8_t *) _master_password.data(), _master_password.size(), &new_pswd_hash) != SGX_SUCCESS) {
+    if (sgx_sha256_msg(reinterpret_cast<const uint8_t *>(_master_password.data()), _master_password.size(), &new_pswd_hash) != SGX_SUCCESS) {
         on_error("[check_password] Unable to compare passwords");
         return false;
     }
