@@ -89,7 +89,9 @@ int io_handler::run(std::size_t argc, char* argv[])
 
 void io_handler::handle_help(const po::options_description& description_)
 {
-    std::cout << "Usage: options_description [options]\n";
+    std::cout << "Welcome to WUSS!\n";
+    std::cout << "WUSS enables you to securely store your passwords on all computers!\n";
+    std::cout << "Usage: wuss [options]\n";
     std::cout << description_;
 }
 
@@ -166,7 +168,7 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    new_item.id = gn("item", old_item->id);
+    new_item.id = gn("id", old_item->id);
     new_item.username = gn("username", old_item->username);
     new_item.password = gn("password", old_item->password);
 
@@ -191,7 +193,7 @@ void io_handler::handle_view_entry()
     }
 
     const std::string id = io_handler::get_item_id();
-    const auto item = enclave_wrapper::get_instance().show_item(id);
+    const auto& item = enclave_wrapper::get_instance().show_item(id);
     if (!item) 
     {
         std::cout << "Failed to show entry\n";
@@ -229,11 +231,18 @@ void io_handler::handle_view_all_ids()
         return;
     }
     
-    std::cout << "Listing all ids:\n";
-    for (const auto& id : enclave_wrapper::get_instance().list_all_ids())
+    const auto& ids = enclave_wrapper::get_instance().list_all_ids();
+    if (ids.empty()) {
+        std::cout << "No entries found\n";
+        return;
+    }
+    
+    std::cout << "===================================";
+    for (const auto& id : ids)
     {
         std::cout << id << "\n";
     }
+    std::cout << "===================================";
 }
 
 void io_handler::handle_view_all_entries()
@@ -244,9 +253,16 @@ void io_handler::handle_view_all_entries()
         return;
     }
 
+    const auto& entries = enclave_wrapper::get_instance().show_all_items();
+    if (entries.empty())
+    {
+        std::cout << "No entries found\n";
+        return;
+    }
+
     std::cout << "Listing all entries:\n";
     std::cout << "===================================\n";
-    for (const auto& item : enclave_wrapper::get_instance().show_all_items())
+    for (const auto& item : entries)
     {
         std::cout << "Id: " << item.id << "\n";
         std::cout << "Username: " << item.username << "\n";
