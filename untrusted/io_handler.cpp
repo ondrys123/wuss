@@ -103,10 +103,10 @@ void io_handler::handle_create_new_wallet()
 {
     std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string mp = io_handler::read_input("Enter new master password: ");
-    if (enclave_wrapper::get_instance().create_wallet(mp)) 
+    if (enclave_wrapper::get_instance().create_wallet(mp))
     {
         std::cout << "New wallet created with master password: " << mp << "\n";
-    } 
+    }
     else
     {
         std::cout << "Failed to create new wallet\n";
@@ -121,7 +121,7 @@ void io_handler::handle_delete_wallet()
         return;
     }
 
-    if (enclave_wrapper::get_instance().delete_wallet()) 
+    if (enclave_wrapper::get_instance().delete_wallet())
     {
         std::cout << "Wallet successfully deleted\n";
     }
@@ -155,8 +155,8 @@ void io_handler::handle_new_entry_generate_password()
     }
 
     item_t entry;
-    entry.id = io_handler::get_item_id();
-    entry.username = io_handler::get_item_login();    
+    entry.id       = io_handler::get_item_id();
+    entry.username = io_handler::get_item_login();
     pswd_params_t pswd_params;
 
     const auto alpha_count = io_handler::read_number("Enter number of alphabet characters: ");
@@ -179,7 +179,8 @@ void io_handler::handle_new_entry_generate_password()
         return;
     }
     pswd_params.symbol_count = *symbol_count;
-    if (pswd_params.alpha_count + pswd_params.num_count + pswd_params.symbol_count == 0) {
+    if (pswd_params.alpha_count + pswd_params.num_count + pswd_params.symbol_count == 0)
+    {
         std::cout << "Cannot create emptry password\n";
         return;
     }
@@ -192,9 +193,9 @@ void io_handler::handle_new_entry_generate_password()
 
 void io_handler::handle_edit_entry()
 {
-    const auto gn = [](std::string type, std::string old_value){
+    const auto gn = [](std::string type, std::string old_value) {
         const auto change = io_handler::read_input("Do you want to change value of " + type + "? (y/n): ");
-        if (change == "n") 
+        if (change == "n")
         {
             return old_value;
         }
@@ -202,14 +203,14 @@ void io_handler::handle_edit_entry()
         return io_handler::read_input("Enter new value of " + type + ": ");
     };
 
-    if (!check_master_password()) 
+    if (!check_master_password())
     {
         std::cout << "Incorrect password\n";
         return;
     }
 
     const std::string id = io_handler::get_item_id();
-    const auto old_item = enclave_wrapper::get_instance().show_item(id);
+    const auto old_item  = enclave_wrapper::get_instance().show_item(id);
     if (!old_item)
     {
         std::cout << "Entry with given id not found\n";
@@ -217,17 +218,17 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    new_item.id = gn("id", old_item->id);
+    new_item.id       = gn("id", old_item->id);
     new_item.username = gn("username", old_item->username);
     new_item.password = gn("password", old_item->password);
 
-    if (!enclave_wrapper::get_instance().delete_item(id)) 
+    if (!enclave_wrapper::get_instance().delete_item(id))
     {
         std::cout << "Failed to edit entry\n";
         return;
     }
 
-    if (!enclave_wrapper::get_instance().add_item(new_item)) 
+    if (!enclave_wrapper::get_instance().add_item(new_item))
     {
         std::cout << "Failed to edit entry\n";
     }
@@ -242,8 +243,8 @@ void io_handler::handle_view_entry()
     }
 
     const std::string id = io_handler::get_item_id();
-    const auto& item = enclave_wrapper::get_instance().show_item(id);
-    if (!item) 
+    const auto& item     = enclave_wrapper::get_instance().show_item(id);
+    if (!item)
     {
         std::cout << "Failed to show entry\n";
         return;
@@ -255,18 +256,18 @@ void io_handler::handle_view_entry()
 
 void io_handler::handle_remove_entry()
 {
-    if(!check_master_password())
+    if (!check_master_password())
     {
         std::cout << "Incorrect password\n";
         return;
     }
 
     const std::string id = io_handler::get_item_id();
-    if (enclave_wrapper::get_instance().delete_item(id)) 
+    if (enclave_wrapper::get_instance().delete_item(id))
     {
         std::cout << "Entry \"" << id << "\" successfully removed\n";
     }
-    else 
+    else
     {
         std::cout << "Failed to remove entry\n";
     }
@@ -279,13 +280,14 @@ void io_handler::handle_view_all_ids()
         std::cout << "Incorrect password\n";
         return;
     }
-    
+
     const auto& ids = enclave_wrapper::get_instance().list_all_ids();
-    if (ids.empty()) {
+    if (ids.empty())
+    {
         std::cout << "No entries found\n";
         return;
     }
-    
+
     std::cout << "===================================\n";
     for (const auto& id : ids)
     {
@@ -322,7 +324,7 @@ void io_handler::handle_view_all_entries()
 
 void io_handler::handle_change_master_password()
 {
-    const std::string mp     = io_handler::get_master_password();
+    const std::string mp = io_handler::get_master_password();
     std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
     enclave_wrapper::get_instance().change_master_password(mp, new_mp);
@@ -354,13 +356,14 @@ std::string io_handler::get_item_password()
     return io_handler::read_input("Enter password of the entry: ");
 }
 
-std::optional<uint32_t> io_handler::read_number(const std::string& output_) 
+std::optional<uint32_t> io_handler::read_number(const std::string& output_)
 {
     const auto& in = io_handler::read_input(output_);
-    try 
+    try
     {
         auto ret = std::stol(in);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             std::cout << "Not able to read the number.\nPlease make sure you entered positive number.\n";
             return {};
         }
