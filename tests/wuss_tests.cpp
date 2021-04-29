@@ -52,7 +52,6 @@ run_result run_wuss(params_t params_, const params_t& input_ = {})
     }
     run_result res;
     std::string line;
-    //    if (c.running())
     {
         while (std::getline(ips_out, line) && !line.empty())
         {
@@ -117,7 +116,7 @@ SCENARIO("Create new wallet and add items to it")
             THEN("No error occurs")
             {
                 add1.no_cerr();
-                add1.no_cerr();
+                add2.no_cerr();
             }
             WHEN("We print all IDs")
             {
@@ -138,7 +137,7 @@ SCENARIO("Create new wallet and add items to it")
             WHEN("We print one item")
             {
                 const auto r = run_wuss({"-v"}, {test_mp, "facebook"});
-                THEN("Output says wallet is empty") { r.no_cerr().out_has("my@mail.com").out_has("$stronkPW"); }
+                THEN("Username and password gets printed") { r.no_cerr().out_has("my@mail.com").out_has("$stronkPW"); }
             }
             WHEN("We print non-existent item")
             {

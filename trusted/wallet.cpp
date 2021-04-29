@@ -56,6 +56,12 @@ bool wallet::create_wallet(const password_t& mp_)
         return false;
     }
 
+    if (!check_password_policy(mp_))
+    {
+        on_error("[create_wallet] Password policy issue");
+        return false;
+    }
+
     _master_password = mp_;
     _items.clear();
     _state = state::open;
@@ -96,6 +102,46 @@ bool wallet::check_password(const password_t& mp_)
     return false;
 }
 
+bool wallet::check_password_policy(const password_t& mp_)
+{
+    if (mp_.size() < 8)
+    {
+        on_error("[create_wallet] Master password must be at least 8 characters long");
+        return false;
+    }
+    int num   = 0;
+    int punct = 0;
+    for (size_t i = 0; i < mp_.size(); i++)
+    {
+        if (std::isdigit(mp_[i]))
+        {
+            num++;
+        }
+
+        if (std::ispunct(mp_[i]))
+        {
+            punct++;
+        }
+
+        if (num > 0 && punct > 0)
+        {
+            break;
+        }
+    }
+    if (num == 0)
+    {
+        on_error("[create_wallet] Master password must contains at least one digit");
+        return false;
+    }
+
+    if (punct == 0)
+    {
+        on_error("[create_wallet] Master password must contains at least one special character");
+        return false;
+    }
+    return true;
+}
+
 bool wallet::change_master_password(const password_t& old_mp_, const password_t& new_mp_)
 {
     if (_state == state::not_loaded)
@@ -109,6 +155,13 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
         on_error("[change_master_password] Invalid master password");
         return false;
     }
+
+    if (!check_password_policy(new_mp_))
+    {
+        on_error("[change_master_password] Password policy issue");
+        return false;
+    }
+
     _master_password = new_mp_;
     _state           = state::open;
     update_stored_wallet();
