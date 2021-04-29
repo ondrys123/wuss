@@ -2,10 +2,10 @@
 #include "enclave_u.h"
 #include "sgx_urts.h"
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
-#define WALLET_FILE "wallet.txt"
+#define WALLET_FILE "wallet.seal"
 
 
 namespace wuss
@@ -193,14 +193,17 @@ void enclave_wrapper::on_error(const std::string& error_)
 int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t sealed_size)
 {
     std::ofstream file(WALLET_FILE, std::ios::out | std::ios::binary);
-    if (file.fail()) {return 1;}
-    file.write((const char*) sealed_data, sealed_size);
-    file.close();
+    if (file.fail())
+    {
+        return 1;
+    }
+    file.write((const char*)sealed_data, sealed_size);
     return 0;
 }
 
 
-size_t enclave_wrapper::get_file_size(){
+size_t enclave_wrapper::get_file_size()
+{
     if (std::filesystem::exists(WALLET_FILE))
     {
         return std::filesystem::file_size(WALLET_FILE);
@@ -211,22 +214,11 @@ size_t enclave_wrapper::get_file_size(){
 int enclave_wrapper::load_wallet(uint8_t* sealed_data, const size_t sealed_size)
 {
     std::ifstream file(WALLET_FILE, std::ios::in | std::ios::binary);
-    if (file.fail()) {return 1;}
-    file.read((char*) sealed_data, sealed_size);
-    file.close();
+    if (file.fail())
+    {
+        return 1;
+    }
+    file.read((char*)sealed_data, sealed_size);
     return 0;
 }
-
-int enclave_wrapper::wallet_exists(void){
-    std::ifstream file(WALLET_FILE, std::ios::in | std::ios::binary);
-    if (file.fail()) {return 0;}   
-    file.close();
-    return 1;
-}
-
-
-
-
-
-
 } // namespace wuss
