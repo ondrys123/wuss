@@ -289,17 +289,17 @@ std::string wallet::generate_password(pswd_params_t params_)
     const std::vector<std::string> char_sets{characters, numbers, special_symbols};
     std::string pswd;
     while (true) {
-        const auto sum = params_.char_count + params_.num_count + params_.symbol_count;
+        const auto sum = params_.alpha_count + params_.num_count + params_.symbol_count;
         if (sum == 0) {
             break;
         }
         const auto rand = get_random(sum);
         const auto char_set_index = [&] {
-        if (rand < params_.char_count) {
-            --params_.char_count;
+        if (rand < params_.alpha_count) {
+            --params_.alpha_count;
             return 0;
         }
-        if (rand < params_.char_count + params_.num_count) {
+        if (rand < params_.alpha_count + params_.num_count) {
             --params_.num_count;
             return 1;
         }

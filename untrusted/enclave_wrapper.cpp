@@ -85,7 +85,7 @@ bool enclave_wrapper::add_item(const item_t& item_, const std::optional<const ps
     } 
     else
     {
-        status = ::add_item_generate_password(_eid, &ret, item_.id.c_str(), item_.username.c_str(), params_->char_count, params_->num_count, params_->symbol_count);
+        status = ::add_item_generate_password(_eid, &ret, item_.id.c_str(), item_.username.c_str(), params_->alpha_count, params_->num_count, params_->symbol_count);
     }
     throw_on_failure(status, "Failed to add item into wallet");
     return ret;

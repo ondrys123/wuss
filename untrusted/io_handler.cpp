@@ -158,12 +158,12 @@ void io_handler::handle_new_entry_generate_password()
     entry.username = io_handler::get_item_login();    
     pswd_params_t pswd_params;
 
-    const auto char_count = io_handler::read_number("Enter count of alphabet characters: ");
-    if (!char_count)
+    const auto alpha_count = io_handler::read_number("Enter count of alphabet characters: ");
+    if (!alpha_count)
     {
         return;
     }
-    pswd_params.char_count = *char_count;
+    pswd_params.alpha_count = *alpha_count;
 
     const auto number_count = io_handler::read_number("Enter count of numbers: ");
     if (!number_count)
@@ -178,6 +178,10 @@ void io_handler::handle_new_entry_generate_password()
         return;
     }
     pswd_params.symbol_count = *symbol_count;
+    if (pswd_params.alpha_count + pswd_params.num_count + pswd_params.symbol_count == 0) {
+        std::cout << "Cannot create emptry password\n";
+        return;
+    }
 
     if (!enclave_wrapper::get_instance().add_item(entry, {pswd_params}))
     {
