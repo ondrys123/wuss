@@ -8,6 +8,11 @@ enclave {
         public int add_item([in, string]const char* id_,
                             [in, string]const char* login_,
                             [in, string]const char* password_);
+        public int add_item_generate_password([in, string]const char* id_,
+                                              [in, string]const char* login_,
+                                              uint32_t character_count,
+                                              uint32_t number_count,
+                                              uint32_t special_symbol_count);
         public int delete_item([in, string]const char* id_);
         public int show_item([in, string]const char* id_,
                              [out, count=output_max_size_]char* output_,

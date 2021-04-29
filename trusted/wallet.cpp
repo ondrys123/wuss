@@ -114,6 +114,11 @@ bool wallet::add_item(const item_t& item_)
     return true;
 }
 
+bool wallet::add_item_generate_password(const item_t& item_, const pswd_params_t& params_)
+{
+    return true;
+}
+
 bool wallet::delete_item(const id_t& id_)
 {
     if (_state != state::open)

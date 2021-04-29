@@ -1,6 +1,7 @@
 #pragma once
 
 #include "item.hpp"
+#include "pswd_params.hpp"
 #include <memory>
 #include <set>
 #include <string>
@@ -35,6 +36,7 @@ public:
     bool check_password(const password_t& mp_);
     bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
     bool add_item(const item_t& item_);
+    bool add_item_generate_password(const item_t& item_, const pswd_params_t& params_);
     bool delete_item(const id_t& id_);
     bool show_item(const id_t& id_, login_t& login_, password_t& password_) const;
     std::set<item_t> show_all_items() const;
