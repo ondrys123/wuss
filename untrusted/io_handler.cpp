@@ -166,8 +166,8 @@ void io_handler::handle_new_entry_generate_password()
     }
 
     item_t entry;
-    entry.id = io_handler::get_item_id();
-    entry.username = io_handler::get_item_login();    
+    entry.id       = io_handler::get_item_id();
+    entry.username = io_handler::get_item_login();
     pswd_params_t pswd_params;
 
     const auto alpha_count = io_handler::read_number("Enter number of alphabet characters: ");
@@ -190,7 +190,8 @@ void io_handler::handle_new_entry_generate_password()
         return;
     }
     pswd_params.symbol_count = *symbol_count;
-    if (pswd_params.alpha_count + pswd_params.num_count + pswd_params.symbol_count == 0) {
+    if (pswd_params.alpha_count + pswd_params.num_count + pswd_params.symbol_count == 0)
+    {
         std::cout << "Cannot create emptry password\n";
         return;
     }
@@ -297,7 +298,7 @@ void io_handler::handle_view_all_ids()
         std::cout << "No entries found\n";
         return;
     }
-    
+
     std::cout << "===================================\n";
     for (const auto& id : ids)
     {
@@ -334,7 +335,7 @@ void io_handler::handle_view_all_entries()
 
 void io_handler::handle_change_master_password()
 {
-    const std::string mp     = io_handler::get_master_password();
+    const std::string mp = io_handler::get_master_password();
     std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
     if (enclave_wrapper::get_instance().change_master_password(mp, new_mp))
@@ -373,13 +374,14 @@ std::string io_handler::get_item_password()
     return io_handler::read_input("Enter password of the entry: ");
 }
 
-std::optional<uint32_t> io_handler::read_number(const std::string& output_) 
+std::optional<uint32_t> io_handler::read_number(const std::string& output_)
 {
     const auto& in = io_handler::read_input(output_);
-    try 
+    try
     {
         auto ret = std::stol(in);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             std::cout << "Not able to read the number.\nPlease make sure you entered positive number.\n";
             return {};
         }
