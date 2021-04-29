@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 #include <numeric>
+#include <sgx_tcrypto.h>
 #include <sgx_trts.h>
 
 namespace wuss
@@ -97,7 +98,19 @@ bool wallet::check_password(const password_t& mp_)
         return false;
     }
 
-    if (mp_ == _master_password)
+    sgx_sha256_hash_t entered_mp_hash = {0};
+    if (sgx_sha256_msg(reinterpret_cast<const uint8_t *>(mp_.data()), mp_.size(), &entered_mp_hash) != SGX_SUCCESS) {
+        on_error("[check_password] Unable to compare passwords");
+        return false;
+    }
+
+    sgx_sha256_hash_t real_mp_hash = {0};
+    if (sgx_sha256_msg(reinterpret_cast<const uint8_t *>(_master_password.data()), _master_password.size(), &real_mp_hash) != SGX_SUCCESS) {
+        on_error("[check_password] Unable to compare passwords");
+        return false;
+    }
+
+    if (std::memcmp(entered_mp_hash, real_mp_hash, 32) == 0)
     {
         _state = state::open;
         return true;
