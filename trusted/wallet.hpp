@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+
 namespace wuss
 {
 class wallet
@@ -49,11 +50,9 @@ public:
     // OCALL Handlers
 public:
     void on_error(const std::string& message_) const;
-
-    // Private methods
-private:
     void update_stored_wallet() const;
     static std::string generate_password(pswd_params_t params_);
+    bool load_stored_wallet();
 
     // Private members
 private:

@@ -27,6 +27,7 @@ int io_handler::run(std::size_t argc, char* argv[])
             ("edit-entry,e", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::edit_entry;}}), "edits entry")
             ("view-entry,v", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::view_entry;}}), "shows entry")
             ("remove-entry,r", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::remove_entry;}}), "removes entry")
+            ("view-all-ids,i", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::view_all_ids;}}),"view all ids")
             ("view-all-entries,a", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::view_all_entries;}}),"view all entries")
             ("change-master-password,p", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::change_master_password;}}), "changes master password");
         // clang-format on
@@ -39,7 +40,7 @@ int io_handler::run(std::size_t argc, char* argv[])
         {
             if (too_many_arguments)
             {
-                std::cerr << "Too many arguments\n";
+                std::cout << "Too many arguments\n";
             }
             io_handler::handle_help(desc);
             return 0;
@@ -67,6 +68,9 @@ int io_handler::run(std::size_t argc, char* argv[])
         case action_t::remove_entry:
             io_handler::handle_remove_entry();
             break;
+        case action_t::view_all_ids:
+            io_handler::handle_view_all_ids();
+            break;
         case action_t::view_all_entries:
             io_handler::handle_view_all_entries();
             break;
@@ -77,35 +81,56 @@ int io_handler::run(std::size_t argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        std::cerr << e.what() << "\n";
+        std::cout << e.what() << "\n";
         return 1;
     }
     return 0;
 }
 
-void io_handler::handle_help(const po::options_description& description_) noexcept
+void io_handler::handle_help(const po::options_description& description_)
 {
-    std::cout << "Usage: options_description [options]\n";
+    std::cout << "Welcome to WUSS!\n";
+    std::cout << "WUSS enables you to securely store your passwords on all computers!\n";
+    std::cout << "Usage: wuss [options]\n";
     std::cout << description_;
 }
 
-void io_handler::handle_create_new_wallet() noexcept
+void io_handler::handle_create_new_wallet()
 {
     const std::string mp = io_handler::read_input("Enter new master password: ");
-    std::cout << "New master password:" << mp << std::endl;
-    enclave_wrapper::get_instance().create_wallet(mp);
+    if (enclave_wrapper::get_instance().create_wallet(mp)) 
+    {
+        std::cout << "New wallet created with master password: " << mp << "\n";
+    } 
+    else
+    {
+        std::cout << "Failed to create new wallet\n";
+    }
 }
 
-void io_handler::handle_delete_wallet() noexcept
-{
-    const std::string mp = io_handler::get_master_password();
-    enclave_wrapper::get_instance().delete_wallet();
-}
-
-void io_handler::handle_new_entry() noexcept
+void io_handler::handle_delete_wallet()
 {
     if (!check_master_password())
     {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    if (enclave_wrapper::get_instance().delete_wallet()) 
+    {
+        std::cout << "Wallet successfully deleted\n";
+    }
+    else
+    {
+        std::cout << "Failed to delete wallet\n";
+    }
+}
+
+void io_handler::handle_new_entry()
+{
+    if (!check_master_password())
+    {
+        std::cout << "Incorrect password\n";
         return;
     }
 
@@ -116,75 +141,170 @@ void io_handler::handle_new_entry() noexcept
     enclave_wrapper::get_instance().add_item(entry);
 }
 
-void io_handler::handle_edit_entry() noexcept
+void io_handler::handle_edit_entry()
 {
-    std::cout << "Editing entry is not implemented\n";
-}
-
-void io_handler::handle_view_entry() noexcept
-{
-    if (check_master_password())
-    {
-        const std::string id = io_handler::get_item_id();
-        enclave_wrapper::get_instance().show_item(id);
-    }
-}
-
-void io_handler::handle_remove_entry() noexcept
-{
-    if (check_master_password())
-    {
-        const std::string id = io_handler::get_item_id();
-        enclave_wrapper::get_instance().delete_item(id);
-    }
-}
-
-void io_handler::handle_view_all_entries() noexcept
-{
-    if (check_master_password())
-    {
-        //        enclave_wrapper::get_instance().show_all_items();
-        for (const auto& v : enclave_wrapper::get_instance().list_all_ids())
+    const auto gn = [](std::string type, std::string old_value){
+        const auto change = io_handler::read_input("Do you want to change value of " + type + "? (y/n): ");
+        if (change == "n") 
         {
-            std::cout << "'" << v << "'" << std::endl;
+            return old_value;
         }
+
+        return io_handler::read_input("Enter new value of " + type + ": ");
+    };
+
+    if (!check_master_password()) 
+    {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    const std::string id = io_handler::get_item_id();
+    const auto old_item = enclave_wrapper::get_instance().show_item(id);
+    if (!old_item)
+    {
+        std::cout << "Entry with given id not found\n";
+        return;
+    }
+
+    item_t new_item;
+    new_item.id = gn("id", old_item->id);
+    new_item.username = gn("username", old_item->username);
+    new_item.password = gn("password", old_item->password);
+
+    if (!enclave_wrapper::get_instance().delete_item(id)) 
+    {
+        std::cout << "Failed to edit entry\n";
+        return;
+    }
+
+    if (!enclave_wrapper::get_instance().add_item(new_item)) 
+    {
+        std::cout << "Failed to edit entry\n";
     }
 }
 
-void io_handler::handle_change_master_password() noexcept
+void io_handler::handle_view_entry()
+{
+    if (!check_master_password())
+    {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    const std::string id = io_handler::get_item_id();
+    const auto& item = enclave_wrapper::get_instance().show_item(id);
+    if (!item) 
+    {
+        std::cout << "Failed to show entry\n";
+        return;
+    }
+
+    std::cout << "Username: " << item->username << "\n";
+    std::cout << "Password: " << item->password << "\n";
+}
+
+void io_handler::handle_remove_entry()
+{
+    if(!check_master_password())
+    {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+
+    const std::string id = io_handler::get_item_id();
+    if (enclave_wrapper::get_instance().delete_item(id)) 
+    {
+        std::cout << "Entry \"" << id << "\" successfully removed\n";
+    }
+    else 
+    {
+        std::cout << "Failed to remove entry\n";
+    }
+}
+
+void io_handler::handle_view_all_ids()
+{
+    if (!check_master_password())
+    {
+        std::cout << "Incorrect password\n";
+        return;
+    }
+    
+    const auto& ids = enclave_wrapper::get_instance().list_all_ids();
+    if (ids.empty()) {
+        std::cout << "No entries found\n";
+        return;
+    }
+    
+    std::cout << "===================================";
+    for (const auto& id : ids)
+    {
+        std::cout << id << "\n";
+    }
+    std::cout << "===================================";
+}
+
+void io_handler::handle_view_all_entries()
+{
+    if (!check_master_password())
+    {
+        std::cout << "Wrong master password\n";
+        return;
+    }
+
+    const auto& entries = enclave_wrapper::get_instance().show_all_items();
+    if (entries.empty())
+    {
+        std::cout << "No entries found\n";
+        return;
+    }
+
+    std::cout << "Listing all entries:\n";
+    std::cout << "===================================\n";
+    for (const auto& item : entries)
+    {
+        std::cout << "Id: " << item.id << "\n";
+        std::cout << "Username: " << item.username << "\n";
+        std::cout << "Password: " << item.password << "\n";
+        std::cout << "===================================\n";
+    }
+}
+
+void io_handler::handle_change_master_password()
 {
     const std::string mp     = io_handler::get_master_password();
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
     enclave_wrapper::get_instance().change_master_password(mp, new_mp);
 }
 
-bool io_handler::check_master_password() noexcept
-{
-    enclave_wrapper::get_instance().check_password("master");
-    return true;
-}
-
-std::string io_handler::get_master_password() noexcept
+std::string io_handler::get_master_password()
 {
     return io_handler::read_input("Enter master password: ");
 }
 
-std::string io_handler::get_item_id() noexcept
+bool io_handler::check_master_password()
+{
+    const auto& password = io_handler::get_master_password();
+    return enclave_wrapper::get_instance().check_password(password);
+}
+
+std::string io_handler::get_item_id()
 {
     return io_handler::read_input("Enter id of the entry: ");
 }
 
-std::string io_handler::get_item_login() noexcept
+std::string io_handler::get_item_login()
 {
     return io_handler::read_input("Enter login of the entry: ");
 }
 
-std::string io_handler::get_item_password() noexcept
+std::string io_handler::get_item_password()
 {
     return io_handler::read_input("Enter password of the entry: ");
 }
 
-std::string io_handler::read_input(const std::string& output) noexcept
+std::string io_handler::read_input(const std::string& output)
 {
     if (!output.empty())
     {
