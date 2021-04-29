@@ -91,7 +91,7 @@ void io_handler::handle_help(const po::options_description& description_)
 {
     std::cout << "Welcome to WUSS!\n";
     std::cout << "WUSS enables you to securely store your passwords on all computers!\n";
-    std::cout << "Usage: ws [options]\n";
+    std::cout << "Usage: wuss [options]\n";
     std::cout << description_;
 }
 
