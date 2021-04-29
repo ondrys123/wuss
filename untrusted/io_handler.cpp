@@ -159,21 +159,21 @@ void io_handler::handle_new_entry_generate_password()
     entry.username = io_handler::get_item_login();    
     pswd_params_t pswd_params;
 
-    const auto alpha_count = io_handler::read_number("Enter count of alphabet characters: ");
+    const auto alpha_count = io_handler::read_number("Enter number of alphabet characters: ");
     if (!alpha_count)
     {
         return;
     }
     pswd_params.alpha_count = *alpha_count;
 
-    const auto number_count = io_handler::read_number("Enter count of numbers: ");
+    const auto number_count = io_handler::read_number("Enter number of numbers: ");
     if (!number_count)
     {
         return;
     }
     pswd_params.num_count = *number_count;
 
-    const auto symbol_count = io_handler::read_number("Enter count of special characters: ");
+    const auto symbol_count = io_handler::read_number("Enter number of special characters: ");
     if (!symbol_count)
     {
         return;
