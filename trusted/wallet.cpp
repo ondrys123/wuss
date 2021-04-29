@@ -2,6 +2,7 @@
 #include "enclave_t.h"
 #include "storage_handler.hpp"
 #include <numeric>
+#include <sgx_tcrypto.h>
 
 namespace wuss
 {
@@ -87,7 +88,19 @@ bool wallet::check_password(const password_t& mp_)
         return false;
     }
 
-    if (mp_ == _master_password)
+    sgx_sha256_hash_t old_pswd_hash = {0};
+    if (sgx_sha256_msg(const uint8_t *) mp_.data(), mp_.size(), &old_pswd_hash) != SGX_SUCCESS) {
+        on_error("[check_password] Unable to compare passwords");
+        return false;
+    }
+
+    sgx_sha256_hash_t new_pswd_hash = {0};
+    if (sgx_sha256_msg((const uint8_t *) _master_password.data(), _master_password.size(), &new_pswd_hash) != SGX_SUCCESS) {
+        on_error("[check_password] Unable to compare passwords");
+        return false;
+    }
+
+    if (std::memcmp(old_pswd_hash, new_pswd_hash, 32) == 0)
     {
         _state = state::open;
         return true;
