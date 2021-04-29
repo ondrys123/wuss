@@ -89,7 +89,9 @@ int io_handler::run(std::size_t argc, char* argv[])
 
 void io_handler::handle_help(const po::options_description& description_)
 {
-    std::cout << "Usage: options_description [options]\n";
+    std::cout << "Welcome to WUSS!\n";
+    std::cout << "WUSS enables you to securely store your passwords on all computers!\n";
+    std::cout << "Usage: ws [options]\n";
     std::cout << description_;
 }
 
@@ -166,7 +168,7 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    new_item.id = gn("item", old_item->id);
+    new_item.id = gn("id", old_item->id);
     new_item.username = gn("username", old_item->username);
     new_item.password = gn("password", old_item->password);
 
