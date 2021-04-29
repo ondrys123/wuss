@@ -1,6 +1,7 @@
 #include "wallet.hpp"
 #include "enclave_t.h"
 #include <numeric>
+#include <sgx_trts.h>
 
 namespace wuss
 {
@@ -114,9 +115,10 @@ bool wallet::add_item(const item_t& item_)
     return true;
 }
 
-bool wallet::add_item_generate_password(const item_t& item_, const pswd_params_t& params_)
+bool wallet::add_item_generate_password(item_t item_, const pswd_params_t& params_)
 {
-    return true;
+    item_.password = wallet::generate_password(params_);
+    return add_item(item_);
 }
 
 bool wallet::delete_item(const id_t& id_)
@@ -221,6 +223,49 @@ void wallet::on_error(const std::string& message_) const
 void wallet::update_stored_wallet() const
 {
     // TODO Save new stuff to file
+}
+
+
+std::string wallet::generate_password(pswd_params_t params_) 
+{
+    const auto get_random = [](uint32_t to) 
+    {
+        uint32_t val = 0;
+        sgx_read_rand(reinterpret_cast<unsigned char*>(&val), sizeof(val));
+        return val;
+    };
+    const std::string upper_case = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const std::string lower_case = "abcdefghijklmnopqrstuvwxyz";
+
+    const std::string characters = upper_case + lower_case;
+    const std::string numbers = "0123456789";
+    const std::string special_symbols = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    const std::vector<std::string> char_sets{characters, numbers, special_symbols};
+    std::string pswd;
+    while (true) {
+        const auto sum = params_.char_count + params_.num_count + params_.symbol_count;
+        if (sum == 0) {
+            break;
+        }
+        const auto rand = get_random(sum);
+        const auto char_set_index = [&] {
+        if (rand < params_.char_count) {
+            --params_.char_count;
+            return 0;
+        }
+        if (rand < params_.char_count + params_.num_count) {
+            --params_.num_count;
+            return 1;
+        }
+        --params_.symbol_count;
+        return 2;
+        }();
+
+        const auto &char_set = char_sets[char_set_index];
+        pswd += char_set[get_random(char_set.size())];
+    }
+    return pswd;
 }
 
 } // namespace wuss
