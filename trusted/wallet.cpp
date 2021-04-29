@@ -1,8 +1,11 @@
 #include "wallet.hpp"
 #include "enclave_t.h"
 #include "storage_handler.hpp"
+#include <array>
+#include <cstring>
 #include <numeric>
 #include <sgx_tcrypto.h>
+#include <sgx_trts.h>
 
 namespace wuss
 {
@@ -11,7 +14,14 @@ std::unique_ptr<wallet> wallet::_instance = nullptr;
 wallet::wallet(wallet::token)
     : _state{state::not_loaded}
 {
-    if (load_stored_wallet())
+    size_t file_size{};
+    const auto status = ::get_file_size(&file_size);
+    if (status != SGX_SUCCESS)
+    {
+        on_error("[wallet] Failed to obtain file size");
+        return;
+    }
+    if (file_size > 0 && load_stored_wallet())
     {
         _state = state::loaded;
     }
@@ -31,7 +41,7 @@ wallet& wallet::get_instance()
 bool wallet::create_wallet(const password_t& mp_)
 {
     size_t size{};
-    const auto status = get_file_size(&size);
+    const auto status = ::get_file_size(&size);
     if (status != SGX_SUCCESS)
     {
         on_error("[create_wallet] Failed to access wallet");
@@ -89,7 +99,7 @@ bool wallet::check_password(const password_t& mp_)
     }
 
     sgx_sha256_hash_t old_pswd_hash = {0};
-    if (sgx_sha256_msg(const uint8_t *) mp_.data(), mp_.size(), &old_pswd_hash) != SGX_SUCCESS) {
+    if (sgx_sha256_msg((const uint8_t *) mp_.data(), mp_.size(), &old_pswd_hash) != SGX_SUCCESS) {
         on_error("[check_password] Unable to compare passwords");
         return false;
     }
@@ -191,6 +201,12 @@ bool wallet::add_item(const item_t& item_)
     _items.insert(item_);
     update_stored_wallet();
     return true;
+}
+
+bool wallet::add_item_generate_password(item_t item_, const pswd_params_t& params_)
+{
+    item_.password = wallet::generate_password(params_);
+    return add_item(item_);
 }
 
 bool wallet::delete_item(const id_t& id_)
@@ -323,17 +339,62 @@ void wallet::update_stored_wallet() const
     }
 
     int ret;
-    sgx_status_t stored_status = store_wallet(&ret, sealed_data.get(), sealed_size);
+    sgx_status_t stored_status = ::store_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS)
     {
         on_error("[update_stored_wallet] Failed to store wallet to file");
     }
 }
 
+std::string wallet::generate_password(pswd_params_t params_)
+{
+    const auto get_random = [](int to) {
+        uint32_t val;
+        sgx_read_rand((unsigned char*)&val, 4);
+        return val % to;
+    };
+    const std::string upper_case = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const std::string lower_case = "abcdefghijklmnopqrstuvwxyz";
+
+    const std::string characters      = upper_case + lower_case;
+    const std::string numbers         = "0123456789";
+    const std::string special_symbols = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    const std::vector<std::string> char_sets{characters, numbers, special_symbols};
+    std::string pswd;
+    while (true)
+    {
+        const auto sum = params_.alpha_count + params_.num_count + params_.symbol_count;
+        if (sum == 0)
+        {
+            break;
+        }
+        const auto rand           = get_random(sum);
+        const auto char_set_index = [&] {
+            if (rand < params_.alpha_count)
+            {
+                --params_.alpha_count;
+                return 0;
+            }
+            if (rand < params_.alpha_count + params_.num_count)
+            {
+                --params_.num_count;
+                return 1;
+            }
+            --params_.symbol_count;
+            return 2;
+        }();
+
+        const auto& char_set = char_sets[char_set_index];
+        pswd += char_set[get_random(char_set.size())];
+    }
+    return pswd;
+}
+
 bool wallet::load_stored_wallet()
 {
     size_t sealed_size{};
-    const auto status = get_file_size(&sealed_size);
+    const auto status = ::get_file_size(&sealed_size);
     if (status != SGX_SUCCESS)
     {
         on_error("[load_stored_wallet] Failed to access wallet");
@@ -352,7 +413,7 @@ bool wallet::load_stored_wallet()
     std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[wallet_size]);
 
     int ret;
-    const auto load_success = load_wallet(&ret, sealed_data.get(), sealed_size);
+    const auto load_success = ::load_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || load_success != SGX_SUCCESS)
     {
         on_error("[load_stored_wallet] Failed to load wallet from file");

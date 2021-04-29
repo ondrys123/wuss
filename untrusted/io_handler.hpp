@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/program_options.hpp>
+#include <optional>
 #include <string>
 
 #include "../trusted/item.hpp"
@@ -16,6 +17,7 @@ enum class action_t
     new_wallet,
     delete_wallet,
     new_entry,
+    new_entry_generate_password,
     edit_entry,
     view_entry,
     remove_entry,
@@ -34,6 +36,7 @@ private:
     static void handle_create_new_wallet();
     static void handle_delete_wallet();
     static void handle_new_entry();
+    static void handle_new_entry_generate_password();
     static void handle_edit_entry();
     static void handle_view_entry();
     static void handle_remove_entry();
@@ -47,6 +50,7 @@ private:
     static std::string get_item_login();
     static std::string get_item_password();
 
+    static std::optional<uint32_t> read_number(const std::string& output = "");
     static std::string read_input(const std::string& output = "");
 };
 } // namespace wuss

@@ -5,12 +5,12 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#define WALLET_FILE "wallet.seal"
 
 
 namespace wuss
 {
 std::optional<enclave_wrapper> enclave_wrapper::_instance = {};
+std::filesystem::path enclave_wrapper::_wallet_path       = "";
 
 enclave_wrapper::enclave_wrapper(token)
 {
@@ -34,6 +34,11 @@ enclave_wrapper& enclave_wrapper::get_instance()
     return *_instance;
 }
 
+void enclave_wrapper::set_wallet_path(const std::filesystem::path& wallet_path_)
+{
+    _wallet_path = wallet_path_;
+}
+
 enclave_wrapper::~enclave_wrapper()
 {
     sgx_destroy_enclave(_eid);
@@ -55,7 +60,11 @@ bool enclave_wrapper::delete_wallet()
 {
     int ret{};
     const auto status = ::delete_wallet(_eid, &ret);
-    throw_on_failure(status, "Failed to delete enclave");
+    throw_on_failure(status, "Failed to delete wallet");
+    if (ret)
+    {
+        ret = std::filesystem::remove(_wallet_path);
+    }
     return ret;
 }
 
@@ -75,10 +84,18 @@ bool enclave_wrapper::change_master_password(const password_t& old_mp_, const pa
     return ret;
 }
 
-bool enclave_wrapper::add_item(const item_t& item_)
+bool enclave_wrapper::add_item(const item_t& item_, const std::optional<const pswd_params_t> params_ /* = std::nullopt */)
 {
     int ret{};
-    const auto status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
+    sgx_status_t status;
+    if (!params_) 
+    {
+        status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
+    } 
+    else
+    {
+        status = ::add_item_generate_password(_eid, &ret, item_.id.c_str(), item_.username.c_str(), params_->alpha_count, params_->num_count, params_->symbol_count);
+    }
     throw_on_failure(status, "Failed to add item into wallet");
     return ret;
 }
@@ -180,19 +197,18 @@ void enclave_wrapper::throw_on_failure(sgx_status_t status_, const std::string& 
     }
 }
 
-
 /********************************************************************************/
 /******************************** OCALL handlers ********************************/
 /********************************************************************************/
 
 void enclave_wrapper::on_error(const std::string& error_)
 {
-    std::cerr << "Error: " << error_ << std::endl;
+    std::cout << "Error: " << error_ << std::endl;
 }
 
 int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t sealed_size)
 {
-    std::ofstream file(WALLET_FILE, std::ios::out | std::ios::binary);
+    std::ofstream file(_wallet_path, std::ios::out | std::ios::binary);
     if (file.fail())
     {
         return 1;
@@ -204,16 +220,16 @@ int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t seale
 
 size_t enclave_wrapper::get_file_size()
 {
-    if (std::filesystem::exists(WALLET_FILE))
+    if (std::filesystem::exists(_wallet_path))
     {
-        return std::filesystem::file_size(WALLET_FILE);
+        return std::filesystem::file_size(_wallet_path);
     }
     return 0;
 }
 
 int enclave_wrapper::load_wallet(uint8_t* sealed_data, const size_t sealed_size)
 {
-    std::ifstream file(WALLET_FILE, std::ios::in | std::ios::binary);
+    std::ifstream file(_wallet_path, std::ios::in | std::ios::binary);
     if (file.fail())
     {
         return 1;

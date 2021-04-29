@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../trusted/item.hpp"
+#include "../trusted/pswd_params.hpp"
 #include "sgx_error.h"
 #include <boost/core/noncopyable.hpp>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <sgx_eid.h>
@@ -27,6 +29,8 @@ public:
      * @return reference to enclave_wrapper instance
      */
     static enclave_wrapper& get_instance();
+
+    static void set_wallet_path(const std::filesystem::path& wallet_path_);
 
     /** @brief Destroys enclave **/
     ~enclave_wrapper();
@@ -71,7 +75,7 @@ public:
      * @brief Add new item to the wallet
      * @return true on success
      */
-    bool add_item(const item_t& item_);
+    bool add_item(const item_t& item_, const std::optional<const pswd_params_t> params_ = std::nullopt);
 
     /**
      * @brief Delete existing item from wallet
@@ -111,6 +115,7 @@ private:
     // Private members
 private:
     static std::optional<enclave_wrapper> _instance; ///< Used enclave_wrapper instance
+    static std::filesystem::path _wallet_path;       ///< Path to sealed wallet
     sgx_enclave_id_t _eid{};                         ///< Enclave ID
 };
 } // namespace wuss

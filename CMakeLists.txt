@@ -27,7 +27,7 @@ find_package(SGX REQUIRED)
 add_subdirectory(misc)
 add_subdirectory(trusted)
 add_subdirectory(untrusted)
-
+add_subdirectory(tests)
 
 # Source files for wuss executable
 set(main_sources
@@ -48,7 +48,10 @@ target_link_libraries(wuss PUBLIC Boost::program_options)
 
 # Define "trusted/trusted.signed.so"
 get_filename_component(SIGNED_LIB_PATH ${CMAKE_BINARY_DIR}/trusted/${signed_lib} REALPATH)
-target_compile_definitions(wuss PUBLIC SIGNED_LIB="${SIGNED_LIB_PATH}")
+target_compile_definitions(wuss PUBLIC
+    SIGNED_LIB="${SIGNED_LIB_PATH}"
+    WUSS_ROOT_DIR="${CMAKE_BINARY_DIR}"
+)
 
 # Unused variables
 if(QT_QMAKE_EXECUTABLE)
