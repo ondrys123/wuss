@@ -1,6 +1,8 @@
 #include "wallet.hpp"
 #include "storage_handler.hpp"
 #include "enclave_t.h"
+#include <array>
+#include <cstring>
 #include <numeric>
 #include <sgx_trts.h>
 
@@ -271,11 +273,11 @@ void wallet::update_stored_wallet() const
 
 std::string wallet::generate_password(pswd_params_t params_) 
 {
-    const auto get_random = [](uint32_t to) 
+    const auto get_random = [](int to) 
     {
-        uint32_t val = 0;
-        sgx_read_rand(reinterpret_cast<unsigned char*>(&val), sizeof(val));
-        return val;
+        uint32_t val; 
+        sgx_read_rand((unsigned char *) &val, 4);
+        return val % to;
     };
     const std::string upper_case = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const std::string lower_case = "abcdefghijklmnopqrstuvwxyz";
