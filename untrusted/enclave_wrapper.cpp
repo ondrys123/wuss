@@ -187,7 +187,7 @@ void enclave_wrapper::throw_on_failure(sgx_status_t status_, const std::string& 
 
 void enclave_wrapper::on_error(const std::string& error_)
 {
-    std::cerr << "Error: " << error_ << std::endl;
+    std::cout << "Error: " << error_ << std::endl;
 }
 
 int enclave_wrapper::store_wallet(const uint8_t* sealed_data, const size_t sealed_size)

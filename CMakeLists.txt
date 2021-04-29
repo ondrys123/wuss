@@ -27,7 +27,7 @@ find_package(SGX REQUIRED)
 add_subdirectory(misc)
 add_subdirectory(trusted)
 add_subdirectory(untrusted)
-
+add_subdirectory(tests)
 
 # Source files for wuss executable
 set(main_sources
