@@ -7,6 +7,8 @@
 
 namespace bp   = boost::process;
 using params_t = std::vector<std::string>;
+namespace fs   = std::filesystem;
+const fs::path test_wallet{fs::path{WUSS_ROOT_DIR} / "test_wallet.seal"};
 
 struct run_result
 {
@@ -29,16 +31,18 @@ struct run_result
     }
     const run_result& wallet_exists() const
     {
-        CHECK(std::filesystem::is_regular_file("wallet.seal"));
+        CHECK(fs::is_regular_file(test_wallet));
         return *this;
     }
 };
 
-run_result run_wuss(const params_t& params_, const params_t& input_ = {})
+run_result run_wuss(params_t params_, const params_t& input_ = {})
 {
     bp::ipstream ips_out;
     bp::ipstream ips_err;
     bp::opstream ops_in;
+    params_.emplace_back("-x");
+    params_.emplace_back("test_wallet");
 
     bp::child c("wuss", bp::args(params_), bp::std_out > ips_out, bp::std_err > ips_err, bp::std_in < ops_in);
 
@@ -67,9 +71,9 @@ const std::string test_mp = "P@$$W0rd322";
 
 inline void clean_wallet_file()
 {
-    if (std::filesystem::exists("wallet.seal"))
+    if (fs::exists(test_wallet))
     {
-        std::filesystem::remove("wallet.seal");
+        fs::remove(test_wallet);
     }
 }
 
@@ -227,7 +231,7 @@ SCENARIO("Deleting existing wallet")
         WHEN("We try to delete with correct password")
         {
             r = run_wuss({"-d"}, {test_mp});
-            THEN("File is gone") { CHECK(!std::filesystem::is_regular_file("wallet.seal")); }
+            THEN("File is gone") { CHECK(!fs::is_regular_file(test_wallet)); }
         }
     }
 }

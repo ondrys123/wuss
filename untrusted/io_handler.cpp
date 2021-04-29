@@ -16,11 +16,12 @@ int io_handler::run(std::size_t argc, char* argv[])
     try
     {
         std::optional<action_t> action;
-
+        std::string wallet_name = "wallet";
         po::options_description desc("Allowed options");
         // clang-format off
         desc.add_options()
             ("help,h", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::help;}}), "show help message")
+            ("wallet-name,x", po::value<std::string>(&wallet_name), "specify name of sealed wallet file")
             ("new-wallet,w", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::new_wallet;}}), "creates new wallet")
             ("delete-wallet,d", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::delete_wallet;}}), "deletes wallet")
             ("new-entry,n", po::bool_switch()->notifier([&](bool b_){if (b_) {action = action_t::new_entry;}}), "creates new entry")
@@ -35,12 +36,22 @@ int io_handler::run(std::size_t argc, char* argv[])
         po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
         po::notify(vm);
 
+        if (vm.count("wallet-name"))
+        {
+            argc -= 2;
+        }
+
+        std::filesystem::path wallet_path{WUSS_ROOT_DIR};
+        wallet_path /= wallet_name;
+        wallet_path.replace_extension(".seal");
+        enclave_wrapper::set_wallet_path(wallet_path);
+
         const bool too_many_arguments = argc > 2;
         if (!action || action == action_t::help || too_many_arguments)
         {
             if (too_many_arguments)
             {
-                std::cout << "Too many arguments\n";
+                std::cout << "Too many arguments\n" << argc;
             }
             io_handler::handle_help(desc);
             return 0;
@@ -99,10 +110,10 @@ void io_handler::handle_create_new_wallet()
 {
     std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string mp = io_handler::read_input("Enter new master password: ");
-    if (enclave_wrapper::get_instance().create_wallet(mp)) 
+    if (enclave_wrapper::get_instance().create_wallet(mp))
     {
         std::cout << "New wallet created with master password: " << mp << "\n";
-    } 
+    }
     else
     {
         std::cout << "Failed to create new wallet\n";
@@ -117,7 +128,7 @@ void io_handler::handle_delete_wallet()
         return;
     }
 
-    if (enclave_wrapper::get_instance().delete_wallet()) 
+    if (enclave_wrapper::get_instance().delete_wallet())
     {
         std::cout << "Wallet successfully deleted\n";
     }
@@ -144,9 +155,9 @@ void io_handler::handle_new_entry()
 
 void io_handler::handle_edit_entry()
 {
-    const auto gn = [](std::string type, std::string old_value){
+    const auto gn = [](std::string type, std::string old_value) {
         const auto change = io_handler::read_input("Do you want to change value of " + type + "? (y/n): ");
-        if (change == "n") 
+        if (change == "n")
         {
             return old_value;
         }
@@ -154,14 +165,14 @@ void io_handler::handle_edit_entry()
         return io_handler::read_input("Enter new value of " + type + ": ");
     };
 
-    if (!check_master_password()) 
+    if (!check_master_password())
     {
         std::cout << "Incorrect password\n";
         return;
     }
 
     const std::string id = io_handler::get_item_id();
-    const auto old_item = enclave_wrapper::get_instance().show_item(id);
+    const auto old_item  = enclave_wrapper::get_instance().show_item(id);
     if (!old_item)
     {
         std::cout << "Entry with given id not found\n";
@@ -169,17 +180,17 @@ void io_handler::handle_edit_entry()
     }
 
     item_t new_item;
-    new_item.id = gn("id", old_item->id);
+    new_item.id       = gn("id", old_item->id);
     new_item.username = gn("username", old_item->username);
     new_item.password = gn("password", old_item->password);
 
-    if (!enclave_wrapper::get_instance().delete_item(id)) 
+    if (!enclave_wrapper::get_instance().delete_item(id))
     {
         std::cout << "Failed to edit entry\n";
         return;
     }
 
-    if (!enclave_wrapper::get_instance().add_item(new_item)) 
+    if (!enclave_wrapper::get_instance().add_item(new_item))
     {
         std::cout << "Failed to edit entry\n";
     }
@@ -194,8 +205,8 @@ void io_handler::handle_view_entry()
     }
 
     const std::string id = io_handler::get_item_id();
-    const auto& item = enclave_wrapper::get_instance().show_item(id);
-    if (!item) 
+    const auto& item     = enclave_wrapper::get_instance().show_item(id);
+    if (!item)
     {
         std::cout << "Failed to show entry\n";
         return;
@@ -207,18 +218,18 @@ void io_handler::handle_view_entry()
 
 void io_handler::handle_remove_entry()
 {
-    if(!check_master_password())
+    if (!check_master_password())
     {
         std::cout << "Incorrect password\n";
         return;
     }
 
     const std::string id = io_handler::get_item_id();
-    if (enclave_wrapper::get_instance().delete_item(id)) 
+    if (enclave_wrapper::get_instance().delete_item(id))
     {
         std::cout << "Entry \"" << id << "\" successfully removed\n";
     }
-    else 
+    else
     {
         std::cout << "Failed to remove entry\n";
     }
@@ -231,13 +242,14 @@ void io_handler::handle_view_all_ids()
         std::cout << "Incorrect password\n";
         return;
     }
-    
+
     const auto& ids = enclave_wrapper::get_instance().list_all_ids();
-    if (ids.empty()) {
+    if (ids.empty())
+    {
         std::cout << "No entries found\n";
         return;
     }
-    
+
     std::cout << "===================================";
     for (const auto& id : ids)
     {
@@ -277,7 +289,14 @@ void io_handler::handle_change_master_password()
     const std::string mp     = io_handler::get_master_password();
     std::cout << "Master password must be at least 8 characters long and has to contain at least one digit and one special character.\n";
     const std::string new_mp = io_handler::read_input("Enter new master password: ");
-    enclave_wrapper::get_instance().change_master_password(mp, new_mp);
+    if (enclave_wrapper::get_instance().change_master_password(mp, new_mp))
+    {
+        std::cout << "Master password changed successfully" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to change master password" << std::endl;
+    }
 }
 
 std::string io_handler::get_master_password()

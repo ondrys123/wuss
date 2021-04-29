@@ -10,7 +10,14 @@ std::unique_ptr<wallet> wallet::_instance = nullptr;
 wallet::wallet(wallet::token)
     : _state{state::not_loaded}
 {
-    if (load_stored_wallet())
+    size_t file_size{};
+    const auto status = get_file_size(&file_size);
+    if (status != SGX_SUCCESS)
+    {
+        on_error("[wallet] Failed to obtain file size");
+        return;
+    }
+    if (file_size > 0 && load_stored_wallet())
     {
         _state = state::loaded;
     }
