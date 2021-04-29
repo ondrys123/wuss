@@ -30,8 +30,5 @@ enclave {
                             size_t sealed_size);
         int load_wallet([out, size=sealed_size]uint8_t* sealed_data,
                         size_t sealed_size);
-
-        int wallet_exists(void);
-
     };
 };
