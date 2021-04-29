@@ -14,7 +14,7 @@ wallet::wallet(wallet::token)
     : _state{state::not_loaded}
 {
     size_t file_size{};
-    const auto status = get_file_size(&file_size);
+    const auto status = ::get_file_size(&file_size);
     if (status != SGX_SUCCESS)
     {
         on_error("[wallet] Failed to obtain file size");
@@ -40,7 +40,7 @@ wallet& wallet::get_instance()
 bool wallet::create_wallet(const password_t& mp_)
 {
     size_t size{};
-    const auto status = get_file_size(&size);
+    const auto status = ::get_file_size(&size);
     if (status != SGX_SUCCESS)
     {
         on_error("[create_wallet] Failed to access wallet");
@@ -326,7 +326,7 @@ void wallet::update_stored_wallet() const
     }
 
     int ret;
-    sgx_status_t stored_status = store_wallet(&ret, sealed_data.get(), sealed_size);
+    sgx_status_t stored_status = ::store_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || stored_status != SGX_SUCCESS)
     {
         on_error("[update_stored_wallet] Failed to store wallet to file");
@@ -381,7 +381,7 @@ std::string wallet::generate_password(pswd_params_t params_)
 bool wallet::load_stored_wallet()
 {
     size_t sealed_size{};
-    const auto status = get_file_size(&sealed_size);
+    const auto status = ::get_file_size(&sealed_size);
     if (status != SGX_SUCCESS)
     {
         on_error("[load_stored_wallet] Failed to access wallet");
@@ -400,7 +400,7 @@ bool wallet::load_stored_wallet()
     std::unique_ptr<uint8_t[]> unsealed_data(new uint8_t[wallet_size]);
 
     int ret;
-    const auto load_success = load_wallet(&ret, sealed_data.get(), sealed_size);
+    const auto load_success = ::load_wallet(&ret, sealed_data.get(), sealed_size);
     if (ret != 0 || load_success != SGX_SUCCESS)
     {
         on_error("[load_stored_wallet] Failed to load wallet from file");
