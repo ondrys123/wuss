@@ -12,13 +12,13 @@ struct run_result
     std::string std_out;
     std::string std_err;
     int ret_code{};
-    const run_result& has_no_errors() const
+    const run_result& no_err() const
     {
         CHECK(ret_code == 0);
         CHECK(std_err.empty());
         return *this;
     }
-    const run_result& out_contains(const std::string& s_) const
+    const run_result& out_has(const std::string& s_) const
     {
         INFO("### Output ###\n" << std_out);
         INFO("### Should contain ###\n" << s_);
@@ -59,5 +59,5 @@ run_result run_wuss(const params_t& params_, const params_t& input_ = {})
 TEST_CASE("wuss help")
 {
     auto r = run_wuss({"-h"});
-    r.has_no_errors().out_contains("--help").out_contains("-h").out_contains("show help message");
+    r.no_err().out_has("--help").out_has("-h").out_has("show help message");
 }
