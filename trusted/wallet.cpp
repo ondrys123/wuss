@@ -1,8 +1,8 @@
 #include "wallet.hpp"
 #include "enclave_t.h"
+#include "storage_handler.hpp"
 #include <array>
 #include <cstring>
-#include "storage_handler.hpp"
 #include <numeric>
 #include <sgx_trts.h>
 
@@ -326,43 +326,46 @@ void wallet::update_stored_wallet() const
     }
 }
 
-std::string wallet::generate_password(pswd_params_t params_) 
+std::string wallet::generate_password(pswd_params_t params_)
 {
-    const auto get_random = [](int to) 
-    {
-        uint32_t val; 
-        sgx_read_rand((unsigned char *) &val, 4);
+    const auto get_random = [](int to) {
+        uint32_t val;
+        sgx_read_rand((unsigned char*)&val, 4);
         return val % to;
     };
     const std::string upper_case = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const std::string lower_case = "abcdefghijklmnopqrstuvwxyz";
 
-    const std::string characters = upper_case + lower_case;
-    const std::string numbers = "0123456789";
+    const std::string characters      = upper_case + lower_case;
+    const std::string numbers         = "0123456789";
     const std::string special_symbols = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
     const std::vector<std::string> char_sets{characters, numbers, special_symbols};
     std::string pswd;
-    while (true) {
+    while (true)
+    {
         const auto sum = params_.alpha_count + params_.num_count + params_.symbol_count;
-        if (sum == 0) {
+        if (sum == 0)
+        {
             break;
         }
-        const auto rand = get_random(sum);
+        const auto rand           = get_random(sum);
         const auto char_set_index = [&] {
-        if (rand < params_.alpha_count) {
-            --params_.alpha_count;
-            return 0;
-        }
-        if (rand < params_.alpha_count + params_.num_count) {
-            --params_.num_count;
-            return 1;
-        }
-        --params_.symbol_count;
-        return 2;
+            if (rand < params_.alpha_count)
+            {
+                --params_.alpha_count;
+                return 0;
+            }
+            if (rand < params_.alpha_count + params_.num_count)
+            {
+                --params_.num_count;
+                return 1;
+            }
+            --params_.symbol_count;
+            return 2;
         }();
 
-        const auto &char_set = char_sets[char_set_index];
+        const auto& char_set = char_sets[char_set_index];
         pswd += char_set[get_random(char_set.size())];
     }
     return pswd;
