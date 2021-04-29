@@ -51,6 +51,7 @@ bool wallet::create_wallet(const password_t& mp_)
 
     if (!check_password_policy(mp_))
     {
+        on_error("[create_wallet] Password policy issue");
         return false;
     }
 
@@ -150,6 +151,7 @@ bool wallet::change_master_password(const password_t& old_mp_, const password_t&
 
     if (!check_password_policy(new_mp_))
     {
+        on_error("[change_master_password] Password policy issue");
         return false;
     }
 
