@@ -268,11 +268,11 @@ bool wallet::load_stored_wallet()
     const auto status = get_file_size(&sealed_size);
     if (status != SGX_SUCCESS)
     {
-        on_error("[load_stored_wallet] Failed to access file");
+        on_error("[load_stored_wallet] Failed to access wallet");
         return false;
     }
 
-    if (sealed_size == 0 || status != SGX_SUCCESS)
+    if (sealed_size == 0)
     {
         on_error("[load_stored_wallet] Wallet is not created");
         return false;
