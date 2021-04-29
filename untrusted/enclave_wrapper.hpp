@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../trusted/item.hpp"
+#include "../trusted/pswd_params.hpp"
 #include "sgx_error.h"
 #include <boost/core/noncopyable.hpp>
 #include <filesystem>
@@ -74,7 +75,7 @@ public:
      * @brief Add new item to the wallet
      * @return true on success
      */
-    bool add_item(const item_t& item_);
+    bool add_item(const item_t& item_, const std::optional<const pswd_params_t> params_ = std::nullopt);
 
     /**
      * @brief Delete existing item from wallet

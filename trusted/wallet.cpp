@@ -1,7 +1,10 @@
 #include "wallet.hpp"
 #include "enclave_t.h"
 #include "storage_handler.hpp"
+#include <array>
+#include <cstring>
 #include <numeric>
+#include <sgx_trts.h>
 
 namespace wuss
 {
@@ -187,6 +190,12 @@ bool wallet::add_item(const item_t& item_)
     return true;
 }
 
+bool wallet::add_item_generate_password(item_t item_, const pswd_params_t& params_)
+{
+    item_.password = wallet::generate_password(params_);
+    return add_item(item_);
+}
+
 bool wallet::delete_item(const id_t& id_)
 {
     if (_state != state::open)
@@ -322,6 +331,51 @@ void wallet::update_stored_wallet() const
     {
         on_error("[update_stored_wallet] Failed to store wallet to file");
     }
+}
+
+std::string wallet::generate_password(pswd_params_t params_)
+{
+    const auto get_random = [](int to) {
+        uint32_t val;
+        sgx_read_rand((unsigned char*)&val, 4);
+        return val % to;
+    };
+    const std::string upper_case = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const std::string lower_case = "abcdefghijklmnopqrstuvwxyz";
+
+    const std::string characters      = upper_case + lower_case;
+    const std::string numbers         = "0123456789";
+    const std::string special_symbols = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    const std::vector<std::string> char_sets{characters, numbers, special_symbols};
+    std::string pswd;
+    while (true)
+    {
+        const auto sum = params_.alpha_count + params_.num_count + params_.symbol_count;
+        if (sum == 0)
+        {
+            break;
+        }
+        const auto rand           = get_random(sum);
+        const auto char_set_index = [&] {
+            if (rand < params_.alpha_count)
+            {
+                --params_.alpha_count;
+                return 0;
+            }
+            if (rand < params_.alpha_count + params_.num_count)
+            {
+                --params_.num_count;
+                return 1;
+            }
+            --params_.symbol_count;
+            return 2;
+        }();
+
+        const auto& char_set = char_sets[char_set_index];
+        pswd += char_set[get_random(char_set.size())];
+    }
+    return pswd;
 }
 
 bool wallet::load_stored_wallet()

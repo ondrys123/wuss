@@ -84,10 +84,18 @@ bool enclave_wrapper::change_master_password(const password_t& old_mp_, const pa
     return ret;
 }
 
-bool enclave_wrapper::add_item(const item_t& item_)
+bool enclave_wrapper::add_item(const item_t& item_, const std::optional<const pswd_params_t> params_ /* = std::nullopt */)
 {
     int ret{};
-    const auto status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
+    sgx_status_t status;
+    if (!params_) 
+    {
+        status = ::add_item(_eid, &ret, item_.id.c_str(), item_.username.c_str(), item_.password.c_str());
+    } 
+    else
+    {
+        status = ::add_item_generate_password(_eid, &ret, item_.id.c_str(), item_.username.c_str(), params_->alpha_count, params_->num_count, params_->symbol_count);
+    }
     throw_on_failure(status, "Failed to add item into wallet");
     return ret;
 }

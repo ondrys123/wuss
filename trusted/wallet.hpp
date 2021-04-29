@@ -1,6 +1,7 @@
 #pragma once
 
 #include "item.hpp"
+#include "pswd_params.hpp"
 #include <memory>
 #include <set>
 #include <string>
@@ -37,6 +38,7 @@ public:
     bool check_password_policy(const password_t& mp_);
     bool change_master_password(const password_t& old_mp_, const password_t& new_mp_);
     bool add_item(const item_t& item_);
+    bool add_item_generate_password(item_t item_, const pswd_params_t& params_);
     bool delete_item(const id_t& id_);
     bool show_item(const id_t& id_, login_t& login_, password_t& password_) const;
     std::set<item_t> show_all_items() const;
@@ -50,6 +52,7 @@ public:
 public:
     void on_error(const std::string& message_) const;
     void update_stored_wallet() const;
+    static std::string generate_password(pswd_params_t params_);
     bool load_stored_wallet();
 
     // Private members

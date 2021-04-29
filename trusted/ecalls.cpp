@@ -29,6 +29,13 @@ int add_item(const char* id_, const char* login_, const char* password_)
     return wallet::get_instance().add_item(item_t{id_, login_, password_});
 }
 
+int add_item_generate_password(const char* id_, const char* login_, 
+                                uint32_t character_count, uint32_t number_count, 
+                                uint32_t special_symbol_count) 
+{
+    return wallet::get_instance().add_item_generate_password(item_t{id_, login_, ""}, pswd_params_t{character_count, number_count, special_symbol_count});
+}
+
 int delete_item(const char* id_)
 {
     return wallet::get_instance().delete_item(id_);
